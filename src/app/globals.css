@@ -1,0 +1,353 @@
+@import "tailwindcss";
+
+/*
+ * Sistema visual de La Canchita, heredado de La Penúltima (el-var/src/app/globals.css).
+ * Los colores son variables: el tema oscuro reproduce la paleta original y el claro
+ * conserva la misma identidad (verde cancha, oro/plata/bronce del podio, azul VAR).
+ * El tema se elige con <html data-theme="dark|light"> (ver src/lib/theme.ts).
+ */
+@theme inline {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-bg: var(--lc-bg);
+  --color-surface-deep: var(--lc-surface-deep);
+  --color-surface: var(--lc-surface);
+  --color-surface-raised: var(--lc-surface-raised);
+  --color-line: var(--lc-line);
+  --color-line-subtle: var(--lc-line-subtle);
+  --color-line-strong: var(--lc-line-strong);
+
+  --color-fg: var(--lc-fg);
+  --color-fg-2: var(--lc-fg-2);
+  --color-fg-3: var(--lc-fg-3);
+
+  /* Verde cancha: fondo de botones (con texto oscuro) y acento de texto */
+  --color-cancha: var(--lc-cancha);
+  --color-cancha-hover: var(--lc-cancha-hover);
+  --color-cancha-text: var(--lc-cancha-text);
+  --color-on-cancha: #0a0a12;
+
+  --color-var-blue: var(--lc-blue);
+  --color-gold: var(--lc-gold);
+  --color-silver: var(--lc-silver);
+  --color-bronze: var(--lc-bronze);
+  --color-danger: var(--lc-danger);
+}
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --lc-bg: #0a0a12;
+  --lc-surface-deep: #11111c;
+  --lc-surface: #18182a;
+  --lc-surface-raised: #20203a;
+  --lc-line: #2a2a45;
+  --lc-line-subtle: #1e1e35;
+  --lc-line-strong: #3b3b60;
+  --lc-fg: #f1f5f9;
+  --lc-fg-2: #94a3b8;
+  --lc-fg-3: #7c8ba1; /* original #64748b, aclarado para 4.5:1 */
+  --lc-cancha: #00c85a;
+  --lc-cancha-hover: #00e87a;
+  --lc-cancha-text: #00c85a;
+  --lc-blue: #60a5fa; /* original #3b82f6, aclarado para texto pequeño */
+  --lc-gold: #f59e0b;
+  --lc-silver: #94a3b8;
+  --lc-bronze: #cd7c3a;
+  --lc-danger: #f87171; /* original #ef4444, aclarado para texto pequeño */
+  --lc-header: rgba(10, 10, 18, 0.8);
+  --lc-glow: rgba(0, 200, 90, 0.25);
+  --lc-glow-strong: rgba(0, 200, 90, 0.4);
+  --lc-card-glow: rgba(0, 200, 90, 0.08);
+  --lc-halo-green: rgba(0, 200, 90, 0.04);
+  --lc-halo-blue: rgba(59, 130, 246, 0.04);
+  --lc-scrollbar: #2a2a45;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --lc-bg: #f3f5f9;
+  --lc-surface-deep: #e9edf3;
+  --lc-surface: #ffffff;
+  --lc-surface-raised: #f7f9fc;
+  --lc-line: #d5dce7;
+  --lc-line-subtle: #e4e9f0;
+  --lc-line-strong: #b4bfcf;
+  --lc-fg: #0f172a;
+  --lc-fg-2: #475569;
+  --lc-fg-3: #5b6878;
+  --lc-cancha: #00c85a;
+  --lc-cancha-hover: #00b552;
+  --lc-cancha-text: #04783a;
+  --lc-blue: #2563eb;
+  --lc-gold: #a85b06;
+  --lc-silver: #5b6878;
+  --lc-bronze: #9a4f15;
+  --lc-danger: #c81e1e;
+  --lc-header: rgba(255, 255, 255, 0.85);
+  --lc-glow: rgba(0, 160, 72, 0.22);
+  --lc-glow-strong: rgba(0, 160, 72, 0.32);
+  --lc-card-glow: rgba(0, 160, 72, 0.1);
+  --lc-halo-green: rgba(0, 200, 90, 0.1);
+  --lc-halo-blue: rgba(59, 130, 246, 0.08);
+  --lc-scrollbar: #c3ccd9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  background: var(--lc-bg);
+  color: var(--lc-fg);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lc-scrollbar);
+  border-radius: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--lc-cancha);
+  outline-offset: 2px;
+}
+
+a,
+button {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Botón principal con el brillo verde original */
+.shadow-cancha {
+  box-shadow: 0 0 20px var(--lc-glow);
+}
+.shadow-cancha:hover {
+  box-shadow: 0 0 28px var(--lc-glow-strong);
+}
+.shadow-card-glow {
+  box-shadow: 0 0 24px var(--lc-card-glow);
+}
+
+.header-blur {
+  background: var(--lc-header);
+}
+
+.brand-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+/* Los logos tienen fondo transparente y "La" casi blanco: en modo claro se apoyan en la
+   superficie oscura original de La Penúltima, como placa de marca intencional. */
+[data-theme="light"] .brand-plate {
+  background: #0a0a12;
+  border-color: rgba(0, 200, 90, 0.35);
+  box-shadow: 0 0 18px rgba(0, 160, 72, 0.18);
+}
+
+/* Logo horizontal por tema (src/components/ui/Logo.tsx): solo una variante visible. */
+.logo-light {
+  display: none;
+}
+[data-theme="light"] .logo-dark {
+  display: none;
+}
+[data-theme="light"] .logo-light {
+  display: block;
+  /* El fondo blanco del PNG (#fdfdfe) se funde con el header claro translúcido. */
+  mix-blend-mode: multiply;
+}
+
+.halo-green {
+  background: var(--lc-halo-green);
+}
+.halo-blue {
+  background: var(--lc-halo-blue);
+}
+
+.text-gradient-green {
+  background: linear-gradient(135deg, var(--lc-cancha-text), var(--lc-cancha-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease both;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.animate-live-pulse {
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-live-pulse {
+    animation: none;
+  }
+}
+
+/* ── Animaciones del jugador, recuperadas de La Penúltima (solo CSS) ─────────────────── */
+/* Live match card glow — pulses the border shadow */
+@keyframes live-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.40),
+      0 0 16px rgba(239, 68, 68, 0.20),
+      0 0 36px rgba(239, 68, 68, 0.09);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.70),
+      0 0 28px rgba(239, 68, 68, 0.38),
+      0 0 56px rgba(239, 68, 68, 0.16);
+  }
+}
+.animate-live-glow {
+  animation: live-glow 1.8s ease-in-out infinite;
+}
+
+/* ── Goal celebration ─────────────────────────────────────────────────
+   Triggered client-side when a live match score changes between refreshes.
+   animate-goal-card replaces animate-live-glow for its 2 s duration.
+   Reduced-motion: shake is disabled; green glow still plays.
+   ──────────────────────────────────────────────────────────────────── */
+@keyframes goal-shake {
+  0%,100% { transform: translateX(0)    rotate(0deg); }
+  15%     { transform: translateX(-5px) rotate(-0.6deg); }
+  30%     { transform: translateX( 5px) rotate( 0.6deg); }
+  50%     { transform: translateX(-4px); }
+  70%     { transform: translateX( 3px); }
+  85%     { transform: translateX(-2px); }
+}
+
+@keyframes goal-glow {
+  0%   { box-shadow: 0 0 0 0   rgba(0,200,90,0);    border-color: rgba(239,68,68,0.35); }
+  15%  { box-shadow: 0 0 0 8px rgba(0,200,90,0.55), 0 0 48px rgba(0,200,90,0.40); border-color: rgba(0,200,90,0.90); }
+  50%  { box-shadow: 0 0 0 4px rgba(0,200,90,0.30), 0 0 24px rgba(0,200,90,0.25); border-color: rgba(0,200,90,0.60); }
+  100% { box-shadow: 0 0 0 0   rgba(0,200,90,0);    border-color: rgba(239,68,68,0.35); }
+}
+
+@keyframes goal-badge {
+  0%   { opacity: 0; transform: scale(0.55) translateY(8px); }
+  20%  { opacity: 1; transform: scale(1.12); }
+  45%  { transform: scale(1); opacity: 1; }
+  75%  { transform: scale(1); opacity: 1; }
+  100% { opacity: 0; transform: scale(0.9) translateY(-6px); }
+}
+
+.animate-goal-card {
+  animation:
+    goal-shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97),
+    goal-glow  2s ease-out;
+}
+
+.animate-goal-badge {
+  animation: goal-badge 2s ease-in-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-goal-card {
+    /* Drop shake, keep the green glow so the change is still noticed */
+    animation: goal-glow 2s ease-out;
+  }
+}
+
+/* Confetti particles — used inside GoalCelebrationOverlay.
+   Duration is supplied per-particle via inline animationDuration.
+   Reduced-motion: particles are hidden entirely; the badge still shows. */
+@keyframes confetti-fall {
+  0%   { transform: translateY(0)     rotate(0deg);   opacity: 1; }
+  65%  { opacity: 1; }
+  100% { transform: translateY(160px) rotate(540deg); opacity: 0; }
+}
+
+.animate-confetti-particle {
+  position: absolute;
+  animation: confetti-fall linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-confetti-particle { display: none; }
+}
+
+/* ── Podio (recuperado de La Penúltima: globals.css, «Entry animations for the tournament-closing Podio page») ── */
+@keyframes podium-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-podium-fade-in { animation: podium-fade-in 0.6s ease both; }
+
+@keyframes podium-fade-scale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-podium-fade-scale { animation: podium-fade-scale 0.5s ease both; }
+
+@keyframes podium-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-podium-rise { animation: podium-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes podium-champion-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35), 0 0 18px rgba(245, 158, 11, 0.18); }
+  50%      { box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.65), 0 0 34px rgba(245, 158, 11, 0.38); }
+}
+.animate-podium-champion-glow { animation: podium-champion-glow 2.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-podium-fade-in,
+  .animate-podium-fade-scale,
+  .animate-podium-rise { animation: none; opacity: 1; transform: none; }
+  .animate-podium-champion-glow { animation: none; }
+}
+
+/* Barra de pestañas y cuadro de la Copa: desplazamiento horizontal sin barra visible (como en La Penúltima). */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

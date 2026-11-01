@@ -1,0 +1,17 @@
+.DS_Store
+# Metadatos locales de Supabase CLI (incluye URL del pooler)
+supabase/.temp/
+# Nunca versionar respaldos ni extracciones
+*.dump
+*.sql.private
+# Cachés de Python
+__pycache__/
+# Next.js / dependencias
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+# Variables de entorno locales (solo .env.example se versiona)
+.env*
+!.env.example
