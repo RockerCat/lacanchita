@@ -249,9 +249,12 @@ export type Database = {
       }
       events: {
         Row: {
+          announced_start_date: string | null
           closed_at: string | null
           created_at: string
           id: string
+          illustration_path: string | null
+          landing_blurb: string | null
           landing_visible: boolean
           name: string
           official_end_at: string | null
@@ -261,9 +264,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          announced_start_date?: string | null
           closed_at?: string | null
           created_at?: string
           id?: string
+          illustration_path?: string | null
+          landing_blurb?: string | null
           landing_visible?: boolean
           name: string
           official_end_at?: string | null
@@ -273,9 +279,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          announced_start_date?: string | null
           closed_at?: string | null
           created_at?: string
           id?: string
+          illustration_path?: string | null
+          landing_blurb?: string | null
           landing_visible?: boolean
           name?: string
           official_end_at?: string | null
@@ -1022,6 +1031,14 @@ export type Database = {
         }
         Returns: string
       }
+      control_set_event_illustration: {
+        Args: { p_event_id: string; p_path: string }
+        Returns: undefined
+      }
+      control_set_event_promo: {
+        Args: { p_announced_start: string; p_blurb: string; p_event_id: string }
+        Returns: undefined
+      }
       control_set_event_status: {
         Args: { p_event_id: string; p_status: string }
         Returns: undefined
@@ -1078,8 +1095,11 @@ export type Database = {
       get_landing_tournaments: {
         Args: never
         Returns: {
+          announced_start_date: string
+          blurb: string
           first_match_at: string
           has_live: boolean
+          illustration_path: string
           is_manual: boolean
           last_match_at: string
           name: string

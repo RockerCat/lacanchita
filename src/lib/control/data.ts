@@ -14,6 +14,9 @@ export type ControlEvent = {
   status: string;
   timezone: string;
   official_end_at: string | null;
+  announced_start_date: string | null;
+  landing_blurb: string | null;
+  illustration_path: string | null;
 };
 export type Stage = Database["public"]["Tables"]["event_stages"]["Row"];
 export type Team = Database["public"]["Tables"]["teams"]["Row"];
@@ -21,7 +24,7 @@ export type Match = Database["public"]["Tables"]["matches"]["Row"];
 export type EventTeam = { team: Team; groupCode: string | null };
 export type AuditRow = Database["public"]["Tables"]["control_audit_log"]["Row"];
 
-const EVENT_COLUMNS = "id, slug, name, status, timezone, official_end_at";
+const EVENT_COLUMNS = "id, slug, name, status, timezone, official_end_at, announced_start_date, landing_blurb, illustration_path";
 
 async function lockReasons(supabase: Client): Promise<Map<string, string>> {
   const { data, error } = await supabase.rpc("control_event_lock_reasons");

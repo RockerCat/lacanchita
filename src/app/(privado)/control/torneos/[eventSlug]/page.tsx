@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import ActionForm from "@/components/ActionForm";
-import { TextField } from "@/components/control/inputs";
+import IllustrationPanel from "@/components/control/IllustrationPanel";
+import { TextAreaField, TextField } from "@/components/control/inputs";
 import EventHeader from "@/components/control/EventHeader";
 import Card from "@/components/ui/Card";
 import { getEventTeams, getMatches, getPendingResults, getPublishIssues, getStages } from "@/lib/control/data";
 import { PUBLISH_ISSUE_LABELS } from "@/lib/control/errors";
 import { summarizeResults } from "@/lib/control/results";
 import { commonTimeZones, utcToLocalInput } from "@/lib/control/time";
-import { publishEventAction, setEventStatusAction, updateEventAction } from "../../actions";
+import { publishEventAction, setEventStatusAction, updateEventAction, updateEventPromoAction } from "../../actions";
 import { loadEvent } from "./event";
 
 export const metadata: Metadata = { title: "Torneo · Control" };
@@ -141,6 +142,22 @@ export default async function EventSummaryPage({ params }: { params: Promise<{ e
           <p className="mt-2 text-sm text-fg-2">Este torneo es de solo lectura.</p>
         )}
       </Card>
+
+      <IllustrationPanel eventId={event.id} eventName={event.name} path={event.illustration_path} editable={editable} />
+
+      {editable && (
+        <Card className="p-5">
+          <h2 className="text-base font-bold text-fg">Promoción en portada</h2>
+          <p className="mt-1 max-w-lg text-sm text-fg-2">Para anunciar el torneo antes de tener calendario. La fecha es solo un anuncio tentativo: no es la de ningún partido y se ignora cuando se cargan los partidos oficiales.</p>
+          <div className="mt-4 max-w-lg">
+            <ActionForm action={updateEventPromoAction} submitLabel="Guardar promoción">
+              <input type="hidden" name="event_id" value={event.id} />
+              <TextField name="announced_start_date" type="date" label="Inicio previsto (fecha, sin hora)" hint="Opcional. Se muestra como «Inicio previsto» con el aviso «Sujeto a programación oficial»." defaultValue={event.announced_start_date ?? ""} />
+              <TextAreaField name="landing_blurb" label="Texto breve de portada" maxLength={280} defaultValue={event.landing_blurb ?? ""} hint="Opcional, hasta 280 caracteres. Sin marcas de terceros." />
+            </ActionForm>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

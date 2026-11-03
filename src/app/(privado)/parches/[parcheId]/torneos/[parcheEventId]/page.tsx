@@ -8,6 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/juego/utils";
 import { requireGame, getMatchesWithPredictions, getParcheLeaderboard } from "@/lib/juego/queries";
+import WaitingSchedule from "@/components/juego/WaitingSchedule";
 import { getBase } from "@/lib/juego/request-base";
 import type { LeaderboardEntry } from "@/lib/juego/groups";
 
@@ -18,6 +19,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ parc
   const user = ctx.user;
   const displayName = ctx.displayName;
   const [resolvedMatches, leaderboard] = await Promise.all([getMatchesWithPredictions(ctx), getParcheLeaderboard(ctx)]);
+  if (resolvedMatches.length === 0) return <WaitingSchedule eventName={ctx.eventName} parcheName={ctx.membership.parcheName} illustrationPath={ctx.eventIllustrationPath} />;
   const userEntry = leaderboard.find((e) => e.user_id === user.id) ?? null;
 
   // Programados con ventana de pronóstico abierta y sin pronóstico propio

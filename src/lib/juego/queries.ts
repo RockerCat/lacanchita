@@ -22,6 +22,7 @@ export type GameContext = {
   parcheEventId: string;
   eventId: string;
   eventName: string;
+  eventIllustrationPath: string | null;
   eventStatus: string;
   tz: string;
   base: string;
@@ -40,7 +41,7 @@ export const getGameContext = cache(async (parcheId: string, parcheEventId: stri
   if (!membership) return null; // un parche ajeno no se revela
   const { data: pe } = await supabase
     .from("parche_events")
-    .select("id, status, event_id, events!inner(id, name, status, timezone)")
+    .select("id, status, event_id, events!inner(id, name, status, timezone, illustration_path)")
     .eq("id", parcheEventId)
     .eq("parche_id", parcheId)
     .maybeSingle();
@@ -55,7 +56,7 @@ export const getGameContext = cache(async (parcheId: string, parcheEventId: stri
   const canPlay = membership.status === "active" && !superadmin && pe.status === "active" && ["scheduled", "in_progress"].includes(ev.status) && !historical;
   setRequest(base, ev.timezone);
   return {
-    user, displayName: displayNameOf(user), membership, parcheId, parcheEventId, eventId: pe.event_id, eventName: ev.name, eventStatus: ev.status,
+    user, displayName: displayNameOf(user), membership, parcheId, parcheEventId, eventId: pe.event_id, eventName: ev.name, eventIllustrationPath: ev.illustration_path, eventStatus: ev.status,
     tz: ev.timezone, base, isSuperadmin: superadmin, historical, canPlay, community: { id: parcheEventId, name: membership.parcheName },
   };
 });

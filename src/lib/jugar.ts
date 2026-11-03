@@ -33,3 +33,22 @@ export function safeReturnToPlay(value: unknown): string | null {
 /** Destino de entrada según el rol real del servidor: el superadministrador administra desde Control; no juega. */
 export const CONTROL_PATH = "/control";
 export const roleHome = (superadmin: boolean, playerHome: string): string => (superadmin ? CONTROL_PATH : playerHome);
+
+/** Texto breve cuando el torneo no trae uno propio (genérico: no promete equipos ni partidos). */
+export const DEFAULT_PROMO_BLURB = "Arma tu parche, invita a tus amigos y prepárense para pronosticar cada partido.";
+
+export type PromoAction = { label: string; href: string };
+
+/**
+ * Acción de la promoción compacta de /parches según los parches de la persona (reutiliza /jugar/<slug>, que es quien
+ * inscribe, con confirmación): nunca ofrece inscribir de nuevo un parche que ya participa.
+ */
+export function promoAction(options: PlayOption[], slug: string): PromoAction {
+  const play = `/jugar/${encodeURIComponent(slug)}`;
+  const enroll = options.filter((o) => o.kind === "enroll");
+  const entered = options.filter((o): o is Extract<PlayOption, { kind: "enter" }> => o.kind === "enter");
+  if (enroll.length > 0) return { label: enroll.length === 1 ? "Inscribir mi parche" : "Inscribir un parche", href: play };
+  if (entered.length === 1) return { label: "Entrar al torneo", href: `/parches/${entered[0].parcheId}/torneos/${entered[0].parcheEventId}` };
+  if (entered.length > 1) return { label: "Ver mis parches inscritos", href: play };
+  return { label: "Ver detalles", href: play };
+}

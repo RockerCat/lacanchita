@@ -151,23 +151,22 @@ describe("torneo destacado dinámico", () => {
   it("sin torneos elegibles: estado honesto, sin torneo inventado ni oferta de QA", () => {
     const x = text(html);
     expect(x).toContain("Estamos preparando los próximos torneos");
-    expect(x).not.toContain("Torneo destacado");
+    expect(x).not.toMatch(/Próximo torneo|Torneo en juego/);
     expect(x).not.toMatch(/QA Jugador|Copa de prueba/);
     expect(html).not.toContain("/jugar/");
   });
   it("un torneo: tarjeta protagonista con nombre real, estado, fecha real y CTA; el visitante abre el registro (botón)", () => {
     const h = renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga-x", name: "Liga X 2027" })]} />);
     const x = text(h);
-    expect(x).toContain("Torneo destacado");
+    expect(x).toContain("Próximo torneo");
     expect(x).toContain("Liga X 2027");
-    expect(x).toContain("Próximamente");
     expect(x).toContain("Inscripciones abiertas");
     expect(x).toContain("Empieza el 1 de febrero");
-    expect(x).toContain("Jugar este torneo");
+    expect(x).toContain("¡Quiero participar!");
     expect(x).toContain("Por ahora es el único torneo disponible");
     expect(h).not.toContain('href="/jugar/liga-x"');
     // La tarjeta está en el primer tramo: antes de «Cómo funciona».
-    expect(x.indexOf("Torneo destacado")).toBeLessThan(x.indexOf("Cuatro pasos y a jugar"));
+    expect(x.indexOf("Próximo torneo")).toBeLessThan(x.indexOf("Cuatro pasos y a jugar"));
   });
   it("con sesión el CTA enlaza a elegir parche (/jugar/slug)", () => {
     const h = renderToStaticMarkup(<Landing user={{ name: "Ana" }} tournaments={[T({ slug: "liga-x", name: "Liga X 2027" })]} />);
@@ -176,10 +175,25 @@ describe("torneo destacado dinámico", () => {
   it("varios torneos: uno protagonista y los demás en una sección secundaria con su propio acceso", () => {
     const h = renderToStaticMarkup(<Landing tournaments={[T({ slug: "b", name: "Beta", status: "scheduled" }), T({ slug: "a", name: "Alfa", status: "in_progress", hasLive: true, nextMatchAt: "2027-01-10T20:00:00Z" })]} />);
     const x = text(h);
-    expect(x).toContain("Torneo destacado Alfa");
-    expect(x).toContain("En juego ahora");
+    // Prioridad: el próximo con inscripciones abiertas (Beta) es el protagonista; el torneo en curso queda como secundario.
+    expect(x).toContain("Próximo torneo Beta");
+    expect(x).not.toContain("Próximo torneo Alfa");
     expect(x).toContain("Otros torneos que puedes jugar");
-    expect(x).toContain("Beta");
+    expect(x).toContain("Alfa");
+    expect(x).toContain("En juego ahora");
+  });
+  it("fecha anunciada sin partidos: «Inicio previsto» con aviso discreto, sin inventar hora ni equipos", () => {
+    const x = text(renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga", name: "Liga Y", firstMatchAt: null, nextMatchAt: null, announcedStart: "2099-11-14" })]} />));
+    expect(x).toContain("Inicio previsto: 14 de noviembre");
+    expect(x).toContain("Sujeto a programación oficial");
+    expect(x).toContain("Inscripciones abiertas");
+    expect(x).toContain("Los equipos y partidos se anunciarán cuando se confirme la programación oficial");
+    expect(x).not.toMatch(/Empieza el/);
+  });
+  it("con partidos oficiales la fecha anunciada ya no se muestra", () => {
+    const x = text(renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga", name: "Liga Y", announcedStart: "2099-11-14" })]} />));
+    expect(x).toContain("Empieza el 1 de febrero");
+    expect(x).not.toMatch(/Inicio previsto|Sujeto a programación/);
   });
 });
 
@@ -193,7 +207,7 @@ describe("portada para el superadministrador", () => {
     expect(sa).not.toContain('href="/jugar/');
     expect(sa).not.toContain('href="/inicio"');
     expect(text(sa)).not.toContain("Ir a mis parches");
-    expect(text(sa)).not.toContain("Jugar este torneo");
+    expect(text(sa)).not.toContain("¡Quiero participar!");
   });
   it("sigue sin mostrar login/registro", () => {
     const header = sa.slice(sa.indexOf("<header"), sa.indexOf("</header>"));
@@ -205,13 +219,13 @@ describe("portada para el superadministrador", () => {
 describe("jerarquía de CTAs", () => {
   const featured = [T({ slug: "liga-x", name: "Liga X 2027" })];
   const primaryGreen = (h: string) => (h.match(/bg-cancha text-on-cancha/g) ?? []).length;
-  const firstStretch = (h: string) => h.slice(h.indexOf("<main"), h.indexOf('id="como-funciona"')); // hero + torneo destacado
+  const firstStretch = (h: string) => h.slice(h.indexOf("<main"), h.indexOf('aria-label="Lo básico')); // hero + promoción
 
-  it("visitante con torneo destacado: un único CTA verde en el primer tramo («Jugar este torneo»); sin «Empezar a jugar»", () => {
+  it("visitante con torneo destacado: un único CTA verde en el primer tramo («¡Quiero participar!»); sin «Empezar a jugar»", () => {
     const h = renderToStaticMarkup(<Landing tournaments={featured} />);
     const top = firstStretch(h);
     expect(primaryGreen(top)).toBe(1);
-    expect(text(top)).toContain("Jugar este torneo");
+    expect(text(top)).toContain("¡Quiero participar!");
     expect(text(top)).not.toContain("Empezar a jugar");
     // «Cómo funciona» es un enlace discreto a la sección explicativa, no un botón grande.
     expect(top).toContain('href="#como-funciona"');
@@ -250,7 +264,7 @@ describe("jerarquía de CTAs", () => {
   });
   it("el CTA del torneo conserva su destino: abre el registro (botón) para el visitante", () => {
     const h = renderToStaticMarkup(<Landing tournaments={featured} />);
-    expect(firstStretch(h)).toMatch(/<button type="button" class="[^"]*">Jugar este torneo<\/button>/);
+    expect(firstStretch(h)).toMatch(/<button type="button" class="[^"]*">¡Quiero participar!<\/button>/);
   });
 });
 
@@ -264,7 +278,32 @@ describe("estado temporal en la tarjeta", () => {
     expect(x).not.toMatch(/Empieza el|En juego|Próximamente/);
   });
   it("en curso y próximo: muestran su estado real", () => {
-    expect(card(T({ slug: "a", name: "A", status: "in_progress", nextMatchAt: "2027-03-09T20:00:00Z" }))).toMatch(/En juego.*Inscripciones abiertas.*Próximo partido: 9 de marzo/);
-    expect(card(T({ slug: "a", name: "A", firstMatchAt: "2027-03-20T20:00:00Z" }))).toMatch(/Próximamente.*Inscripciones abiertas.*Empieza el 20 de marzo/);
+    expect(card(T({ slug: "a", name: "A", status: "in_progress", nextMatchAt: "2027-03-09T20:00:00Z" }))).toMatch(/en juego.*En juego.*Próximo partido: 9 de marzo.*Inscripciones abiertas/i);
+    expect(card(T({ slug: "a", name: "A", firstMatchAt: "2027-03-20T20:00:00Z" }))).toMatch(/Empieza el 20 de marzo.*Inscripciones abiertas/);
+  });
+});
+
+describe("ilustración del torneo en la promoción", () => {
+  const OLD = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const withArt = () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://proyecto.supabase.co";
+    return renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga-x", name: "Liga X 2027", illustrationPath: "ev/img.webp" })]} />);
+  };
+  it("con ilustración: imagen pública con alt, y título, fecha y CTA siguen siendo texto", () => {
+    const h = withArt();
+    expect(h).toContain('src="https://proyecto.supabase.co/storage/v1/object/public/event-illustrations/ev/img.webp"');
+    expect(h).toContain('alt="Ilustración de Liga X 2027"');
+    expect(text(h)).toContain("¡Quiero participar!");
+    expect(text(h)).toContain("Empieza el 1 de febrero");
+    process.env.NEXT_PUBLIC_SUPABASE_URL = OLD;
+  });
+  it("sin ilustración (o sin URL base): sin <img> de torneo, sin huecos ni íconos rotos", () => {
+    const h = renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga-x", name: "Liga X 2027" })]} />);
+    expect(h).not.toContain("event-illustrations");
+    expect(h).not.toContain("Ilustración de");
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "";
+    const g = renderToStaticMarkup(<Landing tournaments={[T({ slug: "liga-x", name: "Liga X 2027", illustrationPath: "ev/img.webp" })]} />);
+    expect(g).not.toContain("Ilustración de");
+    process.env.NEXT_PUBLIC_SUPABASE_URL = OLD;
   });
 });

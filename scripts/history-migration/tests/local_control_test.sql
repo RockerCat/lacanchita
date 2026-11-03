@@ -218,7 +218,7 @@ select pg_temp.try('normal no inscribe un borrador (no se revela)', format($q$se
 -- Publicación
 select pg_temp.as_user('00000000-0000-4000-8000-0000000000a1');
 select pg_temp.try('publicar torneo vacío: bloqueado con detalle', format($q$select public.control_publish_event(%L)$q$, pg_temp.v('e2')), true, 'publish_blocked');
-select pg_temp.check('requisitos del torneo vacío', public.control_event_publish_issues(pg_temp.v('e2')::uuid) @> array['few_teams']::text[]);
+select pg_temp.check('requisitos del torneo vacío', public.control_event_publish_issues(pg_temp.v('e2')::uuid) @> array['no_stages']::text[]);
 select pg_temp.check('requisitos del torneo completo: ninguno', cardinality(public.control_event_publish_issues(pg_temp.v('e1')::uuid)) = 0);
 select pg_temp.try('guardar marcador en un borrador', format($q$select public.control_update_match_live(%L, 'live', 1, 0, null, 0, null)$q$, pg_temp.v('m1')), true, 'event_not_published');
 select pg_temp.try('inscribir borrador (superadmin sin ser miembro)', format($q$select public.add_event_to_parche('10000000-0000-4000-8000-0000000000a1', %L)$q$, pg_temp.v('e1')), true, 'not_authorized');

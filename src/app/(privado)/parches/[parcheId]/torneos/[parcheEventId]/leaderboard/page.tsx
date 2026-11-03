@@ -1,6 +1,7 @@
 import { cn } from "@/lib/juego/utils";
 import { redirect } from "next/navigation";
-import { requireGame, getParcheLeaderboard } from "@/lib/juego/queries";
+import WaitingSchedule from "@/components/juego/WaitingSchedule";
+import { requireGame, getParcheLeaderboard, getMatchesWithPredictions } from "@/lib/juego/queries";
 import type { LeaderboardEntry } from "@/lib/juego/groups";
 
 export default async function LeaderboardPage({ params }: { params: Promise<{ parcheId: string; parcheEventId: string }> }) {
@@ -8,6 +9,8 @@ export default async function LeaderboardPage({ params }: { params: Promise<{ pa
   if (ctx.historical) redirect(`${ctx.base}/historial`);
   const user = ctx.user;
   const community = ctx.community;
+  // Sin partidos no hay clasificación real: todos tendrían 0 puntos y la misma posición.
+  if ((await getMatchesWithPredictions(ctx)).length === 0) return <WaitingSchedule eventName={ctx.eventName} parcheName={ctx.membership.parcheName} />;
   const leaderboard: LeaderboardEntry[] = await getParcheLeaderboard(ctx);
 
   return (

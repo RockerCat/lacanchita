@@ -49,3 +49,28 @@ describe("destino según el rol", () => {
     expect(roleHome(false, "/parches")).toBe("/parches");
   });
 });
+
+describe("promoAction (promoción compacta de /parches)", () => {
+  const enroll = { kind: "enroll", parcheId: "p1", parcheName: "A" } as const;
+  const enter = (id: string) => ({ kind: "enter", parcheId: id, parcheName: id, parcheEventId: `pe-${id}` }) as const;
+  it("con un parche administrado sin inscribir ofrece inscribirlo (vía /jugar/slug)", async () => {
+    const { promoAction } = await import("./jugar");
+    expect(promoAction([enroll], "liga-x")).toEqual({ label: "Inscribir mi parche", href: "/jugar/liga-x" });
+    expect(promoAction([enroll, { ...enroll, parcheId: "p2" }], "liga-x").label).toBe("Inscribir un parche");
+  });
+  it("parche ya inscrito: nunca ofrece inscribir de nuevo; entra al torneo", async () => {
+    const { promoAction } = await import("./jugar");
+    expect(promoAction([enter("p1")], "liga-x")).toEqual({ label: "Entrar al torneo", href: "/parches/p1/torneos/pe-p1" });
+    expect(promoAction([enter("p1"), enter("p2")], "liga-x")).toEqual({ label: "Ver mis parches inscritos", href: "/jugar/liga-x" });
+  });
+  it("miembro sin permisos o deshabilitado: solo ver detalles; sin parches: el estado vacío usa Crear parche", async () => {
+    const { promoAction } = await import("./jugar");
+    expect(promoAction([{ kind: "ask_admin", parcheId: "p", parcheName: "P" }], "x").label).toBe("Ver detalles");
+    expect(promoAction([{ kind: "disabled", parcheId: "p", parcheName: "P" }], "x").label).toBe("Ver detalles");
+    expect(promoAction([], "x").label).toBe("Ver detalles");
+  });
+  it("destino de creación seguro desde la promoción", async () => {
+    const { safeReturnToPlay } = await import("./jugar");
+    expect(safeReturnToPlay("/jugar/liga-primera-division-colombiana-2026-ii")).toBe("/jugar/liga-primera-division-colombiana-2026-ii");
+  });
+});

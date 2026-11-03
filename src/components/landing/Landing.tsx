@@ -1,14 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import UserMenu from "@/components/layout/UserMenu";
+import FooterCredits from "@/components/FooterCredits";
 import ThemeToggle from "@/components/ThemeToggle";
 import { logout } from "@/app/login/actions";
 import { POST_LOGIN_PATH } from "@/lib/navigation";
 import { CONTROL_PATH } from "@/lib/jugar";
 import { LogoHorizontal } from "@/components/ui/Logo";
 import { buttonClasses } from "@/components/ui/button";
-import { describeTournament, describeTournamentLine, pickFeatured, playPath, type LandingTournament } from "@/lib/landing-tournaments";
+import { describeTournamentLine, pickFeatured, playPath, type LandingTournament } from "@/lib/landing-tournaments";
 import { BASICS, FAQ, LIVE_FEATURES, SCORING_EXAMPLE, SCORING_NOTES, STEPS } from "@/lib/landing";
+import TournamentPromo from "@/components/torneo/TournamentPromo";
 import { AuthButton, AuthModalProvider, type AuthMode } from "./AuthModal";
 
 const section = "mx-auto w-full max-w-5xl px-4 py-12 sm:py-16";
@@ -34,10 +36,9 @@ function PlayButton({ t, authed, admin = false, className, children }: { t: Land
 export default function Landing({ initialMode = null, next = "/", notice = null, user = null, tournaments = [], now: nowIso }: { initialMode?: AuthMode | null; next?: string; notice?: string | null; user?: { name: string; superadmin?: boolean } | null; tournaments?: LandingTournament[]; now?: string }) {
   const authed = Boolean(user);
   const admin = Boolean(user?.superadmin);
-  const { featured, others } = pickFeatured(tournaments);
   // Instante de la petición (la página es dinámica): los textos de fecha y estado se calculan al servirla, no al compilar.
   const now = nowIso ? new Date(nowIso) : new Date();
-  const featuredInfo = featured ? describeTournament(featured, now) : null;
+  const { featured, others } = pickFeatured(tournaments, now);
   return (
     <AuthModalProvider initialMode={initialMode} next={next} notice={notice}>
       <div className="relative flex min-h-dvh flex-col overflow-x-hidden">
@@ -90,23 +91,9 @@ export default function Landing({ initialMode = null, next = "/", notice = null,
                 La Canchita es un juego donde creas un <strong className="text-fg">parche</strong> (tu grupo de amigos), eliges los marcadores de los partidos de un torneo y sumas puntos por tus aciertos. Al final, gana quien más puntos consiga.
               </p>
               {featured ? (
-                <section aria-label="Torneo destacado" className="mt-5 rounded-2xl border border-cancha/30 bg-cancha/[0.07] p-4">
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-cancha-text">Torneo destacado</p>
-                  <h2 className="mt-1 text-xl font-black text-fg">{featured.name}</h2>
-                  {featuredInfo && (
-                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-fg-2">
-                      {featuredInfo.headline && <span className="font-semibold text-fg">{featuredInfo.headline}</span>}
-                      <span className="font-semibold text-cancha-text">{featuredInfo.headline ? "· " : ""}{featuredInfo.enrollment}</span>
-                      {featuredInfo.detail && <span>· {featuredInfo.detail}</span>}
-                    </p>
-                  )}
-                  <p className="mt-2 text-sm text-fg-2">Arma tu parche y compite pronosticando los partidos de este torneo.</p>
-                  <PlayButton t={featured} authed={authed} admin={admin} className={`${buttonClasses({ size: "md" })} mt-3 w-full sm:w-auto`}>Jugar este torneo</PlayButton>
-                </section>
-              ) : null}
-              {featured ? (
-                <p className="mt-4 text-sm">
-                  <a href="#como-funciona" className="font-semibold text-cancha-text underline-offset-4 hover:underline">Cómo funciona ↓</a>
+                <p className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                  <a href="#proximo-torneo" className="font-semibold text-cancha-text underline-offset-4 hover:underline">Ver el torneo destacado ↓</a>
+                  <a href="#como-funciona" className="font-semibold text-fg-2 underline-offset-4 hover:underline">Cómo funciona ↓</a>
                 </p>
               ) : (
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -118,6 +105,14 @@ export default function Landing({ initialMode = null, next = "/", notice = null,
 
             </div>
           </section>
+
+          {featured && (
+            <div className="mx-auto w-full max-w-5xl px-4 pt-2">
+              <TournamentPromo t={featured} now={now} id="proximo-torneo">
+                <PlayButton t={featured} authed={authed} admin={admin} className={`${buttonClasses({ size: "lg" })} w-full md:w-auto`}>¡Quiero participar!</PlayButton>
+              </TournamentPromo>
+            </div>
+          )}
 
           <section aria-label="Lo básico y reglas del juego" className="mx-auto w-full max-w-5xl px-4 pb-4 pt-6">
           <dl aria-label="Lo básico del juego" className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
@@ -239,13 +234,14 @@ export default function Landing({ initialMode = null, next = "/", notice = null,
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
               <p className="font-black text-fg">La Canchita</p>
-              <p className="mt-1 max-w-xs text-sm text-fg-3">Pronósticos de fútbol entre amigos, en tus parches. Hecho en Colombia 🇨🇴</p>
+              <p className="mt-1 max-w-xs text-sm text-fg-3">Pronósticos de fútbol entre amigos, en tus parches.</p>
             </div>
             <div className="flex items-center gap-3">
               {!authed && <AuthButton mode="login" className="text-sm font-semibold text-cancha-text hover:underline">Iniciar sesión</AuthButton>}
               <ThemeToggle />
             </div>
           </div>
+          <FooterCredits className="mt-6" />
         </footer>
       </div>
     </AuthModalProvider>

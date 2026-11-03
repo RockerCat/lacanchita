@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/data";
 import { controlErrorMessage, ERROR_FIELDS } from "@/lib/control/errors";
 import { isValidTimeZone, localToUtc, TIME_ERROR_MESSAGES } from "@/lib/control/time";
 import { checkCrest } from "@/lib/control/crest";
+import { checkIllustration, ILLUSTRATION_BUCKET } from "@/lib/control/illustration";
 import { suggestFlag } from "@/lib/control/team-visual";
 import { publishMatchNewsSafely } from "@/lib/news/data";
 import { loadCopaModel } from "@/lib/copa/data";
@@ -100,6 +101,22 @@ export async function updateEventAction(_prev: ControlState, fd: FormData): Prom
   if (error) return rpcFailure(fd, error);
   refresh();
   return { error: null, ok: true, message: "Datos del torneo guardados." };
+}
+
+// Promoción del torneo: fecha de inicio ANUNCIADA (civil, sin hora; no es la de ningún partido) y texto breve de portada.
+export async function updateEventPromoAction(_prev: ControlState, fd: FormData): Promise<ControlState> {
+  const { supabase } = await requirePlatformAdmin();
+  const eventId = str(fd, "event_id");
+  if (!isUuid(eventId)) return failure(fd, "event_not_found");
+  const date = str(fd, "announced_start_date");
+  if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T12:00:00Z`)))) return failure(fd, "invalid_date");
+  const blurb = str(fd, "landing_blurb");
+  if (blurb.length > 280) return failure(fd, "invalid_blurb");
+  const { error } = await supabase.rpc("control_set_event_promo", { p_event_id: eventId, p_announced_start: nul(date), p_blurb: nul(blurb) });
+  if (error) return rpcFailure(fd, error);
+  refresh();
+  revalidatePath("/", "layout");
+  return { error: null, ok: true, message: "Promoción guardada." };
 }
 
 export async function publishEventAction(_prev: ControlState, fd: FormData): Promise<ControlState> {
@@ -353,6 +370,49 @@ export async function resolvePendingAction(_prev: ControlState, fd: FormData): P
   if (error) return rpcFailure(fd, error);
   refresh();
   return { error: null, ok: true, message: action === "apply_live" ? "Marcador pendiente aplicado como marcador en vivo." : "Marcador pendiente descartado." };
+}
+
+// ── Ilustración del torneo (opcional) ────────────────────────────────────────
+// Reemplazo seguro: validar contenido y permisos → subir objeto nuevo (nombre único) → asociar → solo entonces retirar
+// el anterior. Si asociar falla, se retira el nuevo y la referencia anterior queda intacta. Doble protección: RLS de
+// Storage y control_set_event_illustration (solo superadministradores).
+export async function uploadIllustrationAction(_prev: ControlState, fd: FormData): Promise<ControlState> {
+  const { supabase } = await requirePlatformAdmin();
+  const eventId = str(fd, "event_id");
+  const file = fd.get("illustration");
+  if (!isUuid(eventId)) return failure(fd, "event_not_found");
+  if (!(file instanceof File)) return failure(fd, "illustration_required");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const check = checkIllustration(bytes);
+  if (!check.ok) return failure(fd, check.code);
+  const { data: ev } = await supabase.from("events").select("illustration_path").eq("id", eventId).maybeSingle();
+  if (!ev) return failure(fd, "event_not_found");
+  const path = `${eventId}/${crypto.randomUUID()}.${check.type.ext}`;
+  const { error: upErr } = await supabase.storage.from(ILLUSTRATION_BUCKET).upload(path, bytes, { contentType: check.type.mime, upsert: false, cacheControl: "31536000" });
+  if (upErr) return failure(fd, "illustration_upload_failed");
+  const { error } = await supabase.rpc("control_set_event_illustration", { p_event_id: eventId, p_path: path });
+  if (error) {
+    await supabase.storage.from(ILLUSTRATION_BUCKET).remove([path]);
+    return rpcFailure(fd, error);
+  }
+  if (ev.illustration_path) await supabase.storage.from(ILLUSTRATION_BUCKET).remove([ev.illustration_path]);
+  refresh();
+  revalidatePath("/", "layout");
+  return { error: null, ok: true, message: "Ilustración guardada." };
+}
+
+export async function removeIllustrationAction(_prev: ControlState, fd: FormData): Promise<ControlState> {
+  const { supabase } = await requirePlatformAdmin();
+  const eventId = str(fd, "event_id");
+  if (!isUuid(eventId)) return failure(fd, "event_not_found");
+  const { data: ev } = await supabase.from("events").select("illustration_path").eq("id", eventId).maybeSingle();
+  if (!ev) return failure(fd, "event_not_found");
+  const { error } = await supabase.rpc("control_set_event_illustration", { p_event_id: eventId, p_path: null as unknown as string });
+  if (error) return rpcFailure(fd, error);
+  if (ev.illustration_path) await supabase.storage.from(ILLUSTRATION_BUCKET).remove([ev.illustration_path]);
+  refresh();
+  revalidatePath("/", "layout");
+  return { error: null, ok: true, message: "Ilustración quitada." };
 }
 
 // ── Escudos de clubes (catálogo global) ──────────────────────────────────────
