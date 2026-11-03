@@ -42,10 +42,11 @@ export function LogoHorizontal({ className = "" }: { className?: string }) {
   );
 }
 
-export function LogoSquare({ className = "" }: { className?: string }) {
+// compact: versión para cabeceras de modales (menos relleno y tamaño por ancho: 160 px en móvil, 224 px desde sm).
+export function LogoSquare({ className = "", compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <span className={`brand-plate rounded-3xl px-6 py-5 ${className}`}>
-      <Image src={logoSquare} alt="La Canchita" priority className="h-auto w-48 sm:w-56" />
+    <span className={`brand-plate rounded-3xl ${compact ? "px-4 py-3" : "px-6 py-5"} ${className}`}>
+      <Image src={logoSquare} alt="La Canchita" priority className={compact ? "h-auto w-36 sm:w-[11.5rem]" : "h-auto w-48 sm:w-56"} />
     </span>
   );
 }

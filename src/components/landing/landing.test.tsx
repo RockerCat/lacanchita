@@ -37,21 +37,16 @@ describe("landing pública", () => {
     expect(html).not.toContain("/control");
     expect(html).not.toContain("/admin");
   });
-  it("lo básico (parche, pronóstico, puntos, tabla) aparece junto al hero, antes del ejemplo y de las secciones largas", () => {
+  it("lo básico (parche, pronóstico, puntos, tabla) aparece junto al hero, antes de las secciones largas", () => {
     for (const b of BASICS) expect(t).toContain(b.term);
     const i = (x: string) => t.indexOf(x);
     expect(i("Tu parche")).toBeGreaterThan(-1);
-    expect(i("Tu parche")).toBeLessThan(i("Ejemplo de demostración"));
-    expect(i("Ejemplo de demostración")).toBeLessThan(i("Cuatro pasos y a jugar"));
+    expect(i("Tu parche")).toBeLessThan(i("Cuatro pasos y a jugar"));
   });
-  it("el ejemplo es una demostración de un partido TERMINADO: pronóstico previo, comparación con el real, puntos según reglas y parche ficticio", () => {
-    expect(t).toContain("Ejemplo de demostración");
-    expect(t).toContain("Partido terminado");
-    expect(t).toContain("Resultado real");
-    expect(t).toContain("elegido antes del partido");
-    expect(t).toContain("Coincide con el marcador real");
-    expect(t).toContain("dependen de las reglas de cada torneo");
-    expect(t).toContain("Tabla de un parche ficticio");
+  it("el hero muestra la ilustración decorativa (sin texto propio) en lugar de la tarjeta de demostración", () => {
+    expect(html).toContain("hero-bg.png");
+    expect(html).toMatch(/<img[^>]*alt=""/);
+    expect(t).not.toContain("Ejemplo de demostración");
     expect(t).not.toMatch(/En vivo\s*<|Live/);
     expect(html).not.toContain("animate-live-pulse");
   });

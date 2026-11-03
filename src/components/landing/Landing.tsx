@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import UserMenu from "@/components/layout/UserMenu";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -68,8 +69,19 @@ export default function Landing({ initialMode = null, next = "/", notice = null,
         </header>
 
         <main className="relative flex-1">
-          <section aria-labelledby="hero" className="mx-auto grid w-full max-w-5xl items-start gap-8 px-4 pb-8 pt-8 sm:pt-14 md:grid-cols-[1.1fr_0.9fr] md:gap-10">
-            <div className="animate-fade-in-up">
+          {/* Hero de ancho completo: la ilustración es la capa de fondo (decorativa) y el contenido va encima. */}
+          <section aria-labelledby="hero" className="relative isolate overflow-hidden">
+            <div aria-hidden="true" className="absolute inset-0 -z-10">
+              {/* Escenario: se ancla abajo a la derecha con su proporción original (sin recortes); en pantallas pequeñas ocupa todo el ancho bajo el texto. */}
+              <div className="absolute bottom-0 right-0 aspect-[1672/941] w-full lg:w-[72%] lg:max-w-[1100px]">
+                <Image src="/img/hero-bg.png" alt="" fill priority sizes="(min-width: 1024px) 1100px, 100vw" className="object-contain" />
+                <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-bg to-transparent lg:h-12" />
+                <div className="absolute inset-y-0 left-0 hidden w-1/2 bg-gradient-to-r from-bg via-bg/60 to-transparent lg:block" />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-bg" />
+            </div>
+            <div className="mx-auto w-full max-w-5xl px-4 pb-[calc(56vw+1rem)] pt-10 sm:pt-14 lg:min-h-[min(41vw,640px)] lg:pb-24 lg:pt-16">
+            <div className="animate-fade-in-up max-w-xl lg:max-w-[35rem]">
               <p className={eyebrow}>El fútbol se vive mejor en parche</p>
               <h1 id="hero" className="mt-3 text-[2rem] font-black leading-[1.08] text-fg sm:text-5xl">
                 Pronostica partidos de fútbol y <span className="text-cancha-text">compite con tus amigos</span>
@@ -102,48 +114,28 @@ export default function Landing({ initialMode = null, next = "/", notice = null,
                   <a href="#como-funciona" className={buttonClasses({ variant: "secondary", size: "lg" })}>Cómo funciona</a>
                 </div>
               )}
-              <p className={`${featured ? "mt-3" : "mt-3"} text-sm text-fg-3`}>Sin apuestas ni dinero: se juega por puntos y por orgullo.</p>
-              <dl aria-label="Lo básico del juego" className="mt-6 grid grid-cols-2 gap-2.5">
-                {BASICS.map((b) => (
-                  <div key={b.term} className="rounded-xl border border-line bg-surface px-3 py-2.5">
-                    <dt className="text-sm font-bold text-fg"><span aria-hidden="true" className="mr-1">{b.icon}</span>{b.term}</dt>
-                    <dd className="mt-0.5 text-xs leading-snug text-fg-2">{b.text}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
-            <figure aria-label="Ejemplo de cómo se ganan puntos" className="rounded-2xl border border-line bg-surface p-4 shadow-xl">
-              <figcaption className="mb-3 flex items-center justify-between text-[11px] uppercase tracking-widest text-fg-3">
-                <span>Ejemplo de demostración</span>
-                <span>Partido terminado</span>
-              </figcaption>
-              <div className="rounded-xl border border-line-subtle bg-surface-raised p-4">
-                <p className="text-center text-xs text-fg-3">Resultado real</p>
-                <p className="mt-1 text-center text-sm font-bold text-fg">🇨🇴 Colombia <span className="mx-2 font-mono text-2xl font-black tabular-nums text-fg">2 – 1</span> Argentina 🇦🇷</p>
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-line-subtle pt-3 text-xs text-fg-2">
-                  <span>Tu pronóstico, elegido antes del partido: <span className="font-mono font-bold text-fg">2 – 1</span></span>
-                  <span className="shrink-0 rounded-md border border-gold/30 bg-gold/10 px-2 py-0.5 font-bold text-gold">+3 pts</span>
-                </div>
+
+            </div>
+          </section>
+
+          <section aria-label="Lo básico y reglas del juego" className="mx-auto w-full max-w-5xl px-4 pb-4 pt-6">
+          <dl aria-label="Lo básico del juego" className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            {BASICS.map((b) => (
+              <div key={b.term} className="rounded-xl border border-line bg-surface px-3 py-2.5">
+                <dt className="text-sm font-bold text-fg"><span aria-hidden="true" className="mr-1">{b.icon}</span>{b.term}</dt>
+                <dd className="mt-0.5 text-xs leading-snug text-fg-2">{b.text}</dd>
               </div>
-              <p className="mt-2 text-xs text-fg-3">Coincide con el marcador real: es un marcador exacto. Los puntos dependen de las reglas de cada torneo.</p>
-              <p className="mb-1.5 mt-4 text-[11px] uppercase tracking-widest text-fg-3">Tabla de un parche ficticio</p>
-              <ol className="flex flex-col gap-1.5" aria-label="Tabla del parche de ejemplo">
-                {[["1", "Camila", "9"], ["2", "Tú", "7"], ["3", "Don Jorge", "4"]].map(([pos, name, pts]) => (
-                  <li key={pos} className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-sm ${name === "Tú" ? "border-cancha/30 bg-cancha/[0.07]" : "border-line-subtle bg-surface-raised"}`}>
-                    <span className="w-4 text-center font-mono text-xs text-fg-3">{pos}</span>
-                    <span className="flex-1 font-semibold text-fg">{name}</span>
-                    <span className="font-mono font-black tabular-nums text-fg">{pts} <span className="text-[10px] font-normal text-fg-3">pts</span></span>
-                  </li>
-                ))}
-              </ol>
-            </figure>
+            ))}
+          </dl>
+            <p className="mt-4 text-sm text-fg-3">Sin apuestas ni dinero: se juega por puntos y por orgullo.</p>
           </section>
 
           <section id="como-funciona" aria-labelledby="como" className={section}>
             <p className={eyebrow}>Cómo funciona</p>
             <h2 id="como" className={h2}>Cuatro pasos y a jugar</h2>
             <p className="mt-2 max-w-2xl text-fg-2">Un parche es tu grupo de amigos, familiares o compañeros con quienes compites haciendo pronósticos.</p>
-            <ol className="mt-8 grid gap-4 sm:grid-cols-2">
+            <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((s, i) => (
                 <li key={s.title} className="flex gap-4 rounded-2xl border border-line bg-surface p-5">
                   <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cancha/15 text-xl">{s.icon}</span>

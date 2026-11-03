@@ -32,11 +32,11 @@ async function trimmed(file, pad) {
 await (await trimmed(src("LaCanchita.png"), 4)).toFile(out("public/branding/derived/LaCanchita-trim.png"));
 
 // Ícono de la cancha (banda superior del logo cuadrado, sin el texto) para favicon e iconos.
-// Banda medida en el original de 500×500: y 85–320, x 122–377 (sobre fondo transparente).
-const iconBand = { left: 122, top: 85, width: 256, height: 236 };
+// Banda medida en el original de 701×711: x 125–576, y 103–522 (sobre fondo transparente); el texto empieza en y 553.
+const iconBand = { left: 125, top: 103, width: 452, height: 420 };
 const icon = await sharp(src("LaCanchita.png"))
   .extract(iconBand)
-  .extend({ top: 10, bottom: 10, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .extend({ top: 16, bottom: 16, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .png()
   .toBuffer();
 await sharp(icon).resize(192, 192).png({ compressionLevel: 9 }).toFile(out("src/app/icon.png"));

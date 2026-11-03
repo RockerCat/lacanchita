@@ -29,7 +29,7 @@ describe.each([
 
 describe("cropStyle", () => {
   it("porcentajes coherentes con el recorte", () => {
-    expect(cropStyle(DARK_LOGO_CROP)).toEqual({ width: "130.82%", left: "-17.14%", top: "-40.38%" });
-    expect(cropStyle(LIGHT_LOGO_CROP)).toEqual({ width: "116.25%", left: "-8.35%", top: "-35.60%" });
+    expect(cropStyle(DARK_LOGO_CROP)).toEqual({ width: "103.57%", left: "-1.54%", top: "-7.01%" });
+    expect(cropStyle(LIGHT_LOGO_CROP)).toEqual({ width: "103.57%", left: "-1.54%", top: "-7.01%" });
   });
 });

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import ForgotForm from "@/app/login/ForgotForm";
 import LoginForm from "@/app/login/LoginForm";
 import SignupForm from "@/app/registro/SignupForm";
+import { LogoSquare } from "@/components/ui/Logo";
 
 // Login y registro de la portada en un modal accesible. Usa <dialog> nativo con showModal(): el navegador aporta
 // la trampa de foco, Escape, el aislamiento del resto de la página (inert), aria-modal y la restauración del foco
@@ -93,7 +94,8 @@ export function AuthModalProvider({
             >
               <span aria-hidden="true">×</span>
             </button>
-            <h2 id="auth-title" className="pr-10 text-xl font-black text-fg">{TITLES[mode]}</h2>
+            <div className="flex justify-center pt-2"><LogoSquare compact /></div>
+            <h2 id="auth-title" className="mt-4 text-center text-xl font-black text-fg">{TITLES[mode]}</h2>
             {mode !== "forgot" && invited && (
               <p role="note" className="mt-3 rounded-xl border border-cancha/30 bg-cancha/[0.08] px-3 py-2 text-sm text-fg-2">
                 Te invitaron a un parche. {mode === "login" ? "Inicia sesión" : "Crea tu cuenta"} para unirte.
@@ -109,7 +111,7 @@ export function AuthModalProvider({
             )}
             {mode === "login" && (
               <>
-                <p className="mt-1 text-sm text-fg-2">Entra con tu correo y tu contraseña.</p>
+                <p className="mt-1 text-center text-sm text-fg-2">Entra con tu correo y tu contraseña.</p>
                 <div className="mt-4"><LoginForm next={nextPath} /></div>
                 <div className="mt-4 flex flex-col items-center gap-2 border-t border-line-subtle pt-4 text-sm text-fg-2">
                   <button type="button" onClick={() => setMode("forgot")} className="font-semibold text-cancha-text hover:underline">Olvidé mi contraseña</button>
@@ -122,7 +124,7 @@ export function AuthModalProvider({
             )}
             {mode === "signup" && (
               <>
-                <p className="mt-1 text-sm text-fg-2">{invited ? "Crea tu cuenta para unirte al parche que te invitó." : "Solo necesitas tu nombre, tu correo y una contraseña."}</p>
+                <p className="mt-1 text-center text-sm text-fg-2">{invited ? "Crea tu cuenta para unirte al parche que te invitó." : "Solo necesitas tu nombre, tu correo y una contraseña."}</p>
                 <SignupForm next={nextPath} />
                 <p className="mt-4 border-t border-line-subtle pt-4 text-center text-sm text-fg-2">
                   ¿Ya tienes cuenta?{" "}
@@ -132,7 +134,7 @@ export function AuthModalProvider({
             )}
             {mode === "forgot" && (
               <>
-                <p className="mt-1 text-sm text-fg-2">Escribe tu correo y te enviamos un enlace para elegir una contraseña nueva.</p>
+                <p className="mt-1 text-center text-sm text-fg-2">Escribe tu correo y te enviamos un enlace para elegir una contraseña nueva.</p>
                 <ForgotForm />
                 <p className="mt-4 border-t border-line-subtle pt-4 text-center text-sm text-fg-2">
                   <button type="button" onClick={() => setMode("login")} className="font-semibold text-cancha-text hover:underline">← Volver a iniciar sesión</button>

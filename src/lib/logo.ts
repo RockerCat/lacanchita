@@ -1,16 +1,16 @@
 // Encuadre de los logos horizontales oficiales dentro de un marco común (mismo espacio en ambos temas).
 // Medidas en píxeles de los PNG originales (no se modifican):
-//   LaCanchita_hor.png          832×300, contenido visible x 113–739, y 67–214
-//   LaCanchita_whitebg_hor.png  2089×753, contenido visible x 161–1935, y 179–575
+//   LaCanchita_hor.png          1887×495, contenido visible x 32–1845, y 34–453
+//   LaCanchita_whitebg_hor.png  1887×495, mismas dimensiones y contenido (también con fondo transparente)
 export type Crop = { imageWidth: number; imageHeight: number; x: number; y: number; width: number; height: number };
 
-export const FRAME = { width: 636, height: 156 };
+export const FRAME = { width: 1822, height: 428 };
 
-export const DARK_LOGO_CROP: Crop = { imageWidth: 832, imageHeight: 300, x: 109, y: 63, width: 636, height: 156 };
-export const LIGHT_LOGO_CROP: Crop = { imageWidth: 2089, imageHeight: 753, x: 150, y: 157, width: 1797, height: 441 };
+export const DARK_LOGO_CROP: Crop = { imageWidth: 1887, imageHeight: 495, x: 28, y: 30, width: 1822, height: 428 };
+export const LIGHT_LOGO_CROP: Crop = { imageWidth: 1887, imageHeight: 495, x: 28, y: 30, width: 1822, height: 428 };
 
-export const DARK_LOGO_CONTENT = { x0: 113, y0: 67, x1: 739, y1: 214 };
-export const LIGHT_LOGO_CONTENT = { x0: 161, y0: 179, x1: 1935, y1: 575 };
+export const DARK_LOGO_CONTENT = { x0: 32, y0: 34, x1: 1845, y1: 453 };
+export const LIGHT_LOGO_CONTENT = { x0: 32, y0: 34, x1: 1845, y1: 453 };
 
 const pct = (n: number) => `${(Math.round(n * 100) / 100).toFixed(2)}%`;
 
