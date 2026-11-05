@@ -7,7 +7,7 @@ const state = {
   active: 1,
   landing: [] as unknown[],
   available: [] as { id: string; name: string; status: string; slug?: string }[],
-  events: [] as { id: string; eventName: string; eventStatus: string; snapshot: null }[],
+  events: [] as { id: string; eventName: string; eventStatus: string; snapshot: null; illustrationPath?: string | null; announcedStart?: string | null; firstMatchAt?: string | null; timezone?: string | null }[],
 };
 vi.mock("next/navigation", () => ({ redirect: () => { throw new Error("redirect"); }, notFound: () => { throw new Error("404"); } }));
 vi.mock("@/lib/auth", () => ({
@@ -144,5 +144,46 @@ describe("resumen del parche: bienvenida de integrantes", () => {
     expect(t).toContain("Entrar al torneo");
     expect(t.indexOf("Liga Inscrita")).toBeLessThan(t.indexOf("Incorporar un torneo"));
     expect(t.indexOf("Incorporar un torneo")).toBeLessThan(t.indexOf("Copa Nueva"));
+  });
+  it("torneo inscrito programado: estado, confirmación, fecha tentativa e ilustración real", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co");
+    state.events = [{ id: "pe1", eventName: "Liga Inscrita", eventStatus: "scheduled", snapshot: null, illustrationPath: "e1/a.png", announcedStart: "2026-11-14" }];
+    const t = await parche();
+    vi.unstubAllEnvs();
+    expect(t).toContain("Esperando inicio");
+    expect(t).toContain("Inscripción confirmada");
+    expect(t).toContain("¡Tu parche ya está inscrito! Estamos esperando que comience el torneo.");
+    expect(t).toContain("Inicio previsto: 14 de noviembre");
+    expect(t).toContain("Fecha tentativa, sujeta a programación oficial");
+    expect(t).toContain("Entrar al torneo");
+    expect(t).not.toContain("En juego");
+  });
+  it("torneo inscrito sin fecha ni ilustración: tarjeta limpia con ⚽", async () => {
+    state.events = [{ id: "pe1", eventName: "Liga Inscrita", eventStatus: "scheduled", snapshot: null }];
+    const t = await parche();
+    expect(t).toContain("⚽");
+    expect(t).not.toContain("Inicio previsto");
+    expect(t).not.toContain("Empieza el");
+  });
+  it("torneo inscrito con primer partido real: fecha confirmada; en juego y finalizado con su texto", async () => {
+    state.events = [{ id: "pe1", eventName: "A", eventStatus: "scheduled", snapshot: null, firstMatchAt: "2026-11-15T01:00:00Z", timezone: "America/Bogota", announcedStart: "2026-11-14" }];
+    const t1 = await parche();
+    expect(t1).toContain("Empieza el 14 de noviembre");
+    expect(t1).not.toContain("Fecha tentativa");
+    state.events = [{ id: "pe2", eventName: "B", eventStatus: "in_progress", snapshot: null }];
+    const t2 = await parche();
+    expect(t2).toContain("En juego");
+    expect(t2).toContain("Haz tus pronósticos y consulta la clasificación");
+    expect(t2).not.toContain("Inscripción confirmada");
+    state.events = [{ id: "pe3", eventName: "C", eventStatus: "finished", snapshot: null }];
+    const t3 = await parche();
+    expect(t3).toContain("Torneo finalizado");
+    expect(t3).toContain("clasificación final");
+  });
+  it("integrante ve la misma tarjeta de torneo inscrito", async () => {
+    state.events = [{ id: "pe1", eventName: "Liga Inscrita", eventStatus: "scheduled", snapshot: null }];
+    const t = await parche();
+    expect(t).toContain("Esperando inicio");
+    expect(t).toContain("Entrar al torneo");
   });
 });

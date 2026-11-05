@@ -12,7 +12,8 @@ import EnrollEvents from "@/components/parches/EnrollEvents";
 import { InviteLinkControls, InviteProvider } from "@/components/parches/InviteLink";
 import { getAvailableEvents, getMembership, getOpenInvitation, getParcheEvents, getParcheMembers } from "@/lib/data";
 import { pickFeatured, toLandingTournaments } from "@/lib/landing-tournaments";
-import { eventStatusLabel, membershipNotice, ROLE_LABELS } from "@/lib/parches";
+import { illustrationUrl } from "@/lib/illustration";
+import { membershipNotice, participationInfo, ROLE_LABELS } from "@/lib/parches";
 import { canManageParche } from "@/lib/permissions";
 import { displayNameOf } from "@/lib/users";
 
@@ -126,35 +127,49 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
           </Card>
         ) : (
           <ul className="flex flex-col gap-3">
-            {events.map((e) => (
-              <li key={e.id}>
-                <Card className="p-4 sm:p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-base font-bold text-fg">{e.eventName}</p>
-                    <Badge variant={e.eventStatus === "in_progress" ? "green" : "gray"}>{eventStatusLabel(e.eventStatus)}</Badge>
-                  </div>
-                  {e.snapshot ? (
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm text-fg-2">
-                        {e.snapshot.kind === "final_close"
-                          ? "Clasificación final oficial disponible."
-                          : "Historial disponible: corte histórico, no cierre oficial."}
-                      </p>
-                      <Link href={`/parches/${parcheId}/torneos/${e.id}`} className={buttonClasses({ size: "sm" })}>
-                        Ver clasificación
-                      </Link>
+            {events.map((e) => {
+              const info = participationInfo(e);
+              const art = illustrationUrl(e.illustrationPath);
+              return (
+                <li key={e.id}>
+                  <Card className="flex flex-col overflow-hidden sm:flex-row sm:items-stretch">
+                    <div className="flex aspect-video w-full items-center justify-center overflow-hidden bg-surface-deep sm:aspect-auto sm:min-h-36 sm:w-56 sm:shrink-0">
+                      {art ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={art} alt={`Ilustración de ${e.eventName}`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                      ) : (
+                        <span aria-hidden="true" className="text-4xl">⚽</span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm text-fg-2">Pronostica los partidos y sigue la clasificación de tu parche.</p>
-                      <Link href={`/parches/${parcheId}/torneos/${e.id}`} className={buttonClasses({ size: "sm" })}>
-                        Entrar al torneo
-                      </Link>
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 p-4 sm:p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={info.badge}>{info.label}</Badge>
+                        {info.confirmed && <Badge variant="green">Inscripción confirmada</Badge>}
+                      </div>
+                      <p className="break-words text-base font-bold leading-snug text-fg">{e.eventName}</p>
+                      {e.snapshot ? (
+                        <p className="text-sm text-fg-2">
+                          {e.snapshot.kind === "final_close" ? "Clasificación final oficial disponible." : "Historial disponible: corte histórico, no cierre oficial."}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-fg-2">{info.message}</p>
+                      )}
+                      {info.start && (
+                        <p className="text-sm text-fg-2">
+                          <span className="font-semibold text-fg">{info.startNote ? "Inicio previsto:" : "Empieza el"} {info.start}</span>
+                          {info.startNote && <span className="block text-xs text-fg-3">{info.startNote}</span>}
+                        </p>
+                      )}
+                      <div className="mt-auto pt-1">
+                        <Link href={`/parches/${parcheId}/torneos/${e.id}`} className={`${buttonClasses({ size: "sm" })} w-full sm:w-auto`}>
+                          {e.snapshot ? "Ver clasificación" : "Entrar al torneo"}
+                        </Link>
+                      </div>
                     </div>
-                  )}
-                </Card>
-              </li>
-            ))}
+                  </Card>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

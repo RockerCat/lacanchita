@@ -49,21 +49,38 @@ export type ParcheEventSummary = {
   eventName: string;
   eventStatus: string;
   snapshot: { kind: string; version: number } | null;
+  illustrationPath: string | null;
+  announcedStart: string | null; // fecha civil tentativa (YYYY-MM-DD)
+  timezone: string | null;
+  firstMatchAt: string | null; // primer partido real cargado (solo torneos programados)
 };
 
 export async function getParcheEvents(supabase: Client, parcheId: string): Promise<ParcheEventSummary[]> {
   const { data, error } = await supabase
     .from("parche_events")
-    .select("id, status, created_at, events!inner(name, status), standing_snapshots(kind, version, sealed_at)")
+    .select("id, status, created_at, events!inner(event_id:id, name, status, illustration_path, announced_start_date, timezone), standing_snapshots(kind, version, sealed_at)")
     .eq("parche_id", parcheId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(`No se pudieron cargar los torneos: ${error.message}`);
-  return (data ?? []).map((pe) => ({
+  const rows = data ?? [];
+  // Primer partido real de los torneos aún programados (para no confundir la fecha anunciada con el calendario).
+  const firstMatch = new Map<string, string | null>();
+  await Promise.all(
+    rows.filter((pe) => pe.events.status === "scheduled").map(async (pe) => {
+      const { data: m } = await supabase.from("matches").select("starts_at").eq("event_id", pe.events.event_id).order("starts_at").limit(1);
+      firstMatch.set(pe.id, m?.[0]?.starts_at ?? null);
+    }),
+  );
+  return rows.map((pe) => ({
     id: pe.id,
     status: pe.status,
     eventName: pe.events.name,
     eventStatus: pe.events.status,
     snapshot: pickSnapshot(pe.standing_snapshots ?? []),
+    illustrationPath: pe.events.illustration_path ?? null,
+    announcedStart: pe.events.announced_start_date ?? null,
+    timezone: pe.events.timezone ?? null,
+    firstMatchAt: firstMatch.get(pe.id) ?? null,
   }));
 }
 

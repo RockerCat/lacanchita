@@ -1,3 +1,4 @@
+import { formatCivilDay } from "./landing-tournaments";
 export type MembershipRole = "owner" | "admin" | "member";
 export type MembershipStatus = "active" | "disabled";
 
@@ -53,4 +54,36 @@ export const EVENT_STATUS_LABELS: Record<string, string> = {
 
 export function eventStatusLabel(status: string): string {
   return EVENT_STATUS_LABELS[status] ?? status;
+}
+
+// Etiqueta y contexto de un torneo en el que el parche ya participa, según el estado PERSISTIDO del torneo (la fecha
+// anunciada nunca lo vuelve «en juego»). La fecha de inicio sale del primer partido real o, sin calendario, del anuncio.
+export type ParticipationInfo = { label: string; badge: "green" | "gray" | "gold"; message: string; confirmed: boolean; start: string | null; startNote: string | null };
+
+export function participationInfo(
+  e: { eventStatus: string; announcedStart?: string | null; firstMatchAt?: string | null; timezone?: string | null },
+): ParticipationInfo {
+  if (e.eventStatus === "in_progress") {
+    return { label: "En juego", badge: "green", message: "Haz tus pronósticos y consulta la clasificación de tu parche.", confirmed: false, start: null, startNote: null };
+  }
+  if (e.eventStatus === "finished" || e.eventStatus === "closed") {
+    return { label: "Torneo finalizado", badge: "gray", message: "Consulta los resultados y la clasificación final.", confirmed: false, start: null, startNote: null };
+  }
+  if (e.eventStatus === "cancelled") {
+    return { label: eventStatusLabel(e.eventStatus), badge: "gray", message: "Este torneo fue cancelado.", confirmed: false, start: null, startNote: null };
+  }
+  let start: string | null = null;
+  let startNote: string | null = null;
+  if (e.firstMatchAt) {
+    const tz = e.timezone || "America/Bogota";
+    try {
+      start = new Date(e.firstMatchAt).toLocaleDateString("es-CO", { day: "numeric", month: "long", timeZone: tz });
+    } catch {
+      start = new Date(e.firstMatchAt).toLocaleDateString("es-CO", { day: "numeric", month: "long", timeZone: "America/Bogota" });
+    }
+  } else if (e.announcedStart) {
+    start = formatCivilDay(e.announcedStart);
+    if (start) startNote = "Fecha tentativa, sujeta a programación oficial";
+  }
+  return { label: "Esperando inicio", badge: "gold", message: "¡Tu parche ya está inscrito! Estamos esperando que comience el torneo.", confirmed: true, start, startNote };
 }
