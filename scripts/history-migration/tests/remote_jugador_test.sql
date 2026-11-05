@@ -88,6 +88,12 @@ select pg_temp.try('jugador: la sincronización perezosa no falla', 'select publ
 -- ── Multiparche: el mismo usuario en un segundo parche, mismo partido, otro pronóstico ──
 select pg_temp.try('jugador: crea un segundo parche (transacción de prueba)',
   $q$insert into vars select 'pb', (public.create_parche('QA multiparche (borrar)', gen_random_uuid()))::text$q$, false);
+-- La regla de inscripción exige ≥2 participantes activos: se añade un amigo al parche de ensayo (dentro de la transacción con ROLLBACK).
+select pg_temp.as_admin();
+insert into public.parche_members (parche_id, user_id)
+  select pg_temp.v('pb')::uuid, user_id from public.parche_members
+  where parche_id = '91ad5d8d-414c-4e74-bf57-2ca476652de0' and role = 'member' and status = 'active' and user_id <> pg_temp.v('player')::uuid limit 1;
+select pg_temp.as_user(pg_temp.v('player')::uuid);
 select pg_temp.try('jugador: inscribe el torneo en el segundo parche', format('select public.add_event_to_parche(%L::uuid, %L::uuid)', pg_temp.v('pb'), pg_temp.v('ev')), false);
 insert into vars select 'pe2', id::text from public.parche_events where parche_id = pg_temp.v('pb')::uuid;
 select pg_temp.try('jugador: pronostica 3-0 el mismo partido en el segundo parche', format('select public.save_prediction(%L::uuid, %L::uuid, 3, 0)', pg_temp.v('pe2'), pg_temp.v('m2')), false);

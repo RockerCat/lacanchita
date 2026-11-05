@@ -50,6 +50,12 @@ create temp table before_counts as select (select count(*) from public.news wher
 select pg_temp.check('la migración está aplicada y el torneo QA no tiene noticias', (select n from before_counts) = 0);
 select pg_temp.as_user(pg_temp.v('player')::uuid);
 insert into vars select 'pb', (public.create_parche('QA noticias (borrar)', gen_random_uuid()))::text;
+-- La regla de inscripción exige ≥2 participantes activos: se añade un amigo al parche de ensayo (dentro de la transacción con ROLLBACK).
+select pg_temp.as_admin();
+insert into public.parche_members (parche_id, user_id)
+  select pg_temp.v('pb')::uuid, user_id from public.parche_members
+  where parche_id = '91ad5d8d-414c-4e74-bf57-2ca476652de0' and role = 'member' and status = 'active' and user_id <> pg_temp.v('player')::uuid limit 1;
+select pg_temp.as_user(pg_temp.v('player')::uuid);
 select public.add_event_to_parche(pg_temp.v('pb')::uuid, pg_temp.v('ev')::uuid);
 insert into vars select 'pe2', id::text from public.parche_events where parche_id = pg_temp.v('pb')::uuid;
 select public.save_prediction(pg_temp.v('pe')::uuid, pg_temp.v('m2')::uuid, 2, 1);

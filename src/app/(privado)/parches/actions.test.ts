@@ -44,6 +44,12 @@ describe("inscribir un parche en un torneo", () => {
     expect(r).toMatchObject({ ok: true });
     expect(state.rpc).toHaveBeenCalledWith("add_event_to_parche", { p_parche_id: ids.parche_id, p_event_id: ids.event_id });
   });
+  it("la base rechaza con menos de 2 participantes activos: error claro y sin inscripción", async () => {
+    state.rpc.mockResolvedValueOnce({ data: null, error: { message: "min_members" } } as never);
+    const r = await enrollEventAction({ error: null }, fd(ids));
+    expect(r.ok).toBeUndefined();
+    expect(r.error).toContain("al menos 2 participantes activos");
+  });
   it("el superadministrador no inscribe parches como jugador", async () => {
     state.superadmin = true;
     const r = await enrollEventAction({ error: null }, fd(ids));

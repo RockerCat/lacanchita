@@ -29,6 +29,8 @@ type Props = {
   resetOnSuccess?: boolean;
   className?: string;
   children?: React.ReactNode;
+  // Paso previo opcional (p. ej. un aviso): si devuelve false, el clic no arma la confirmación ni envía nada.
+  beforeArm?: () => boolean;
 };
 
 // Formulario con Server Action: validación propia en español (noValidate: sin globos del navegador),
@@ -46,6 +48,7 @@ export default function ActionForm({
   resetOnSuccess = false,
   className = "flex flex-col gap-3",
   children,
+  beforeArm,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: null });
   // La confirmación queda "armada" solo para el estado actual: cuando la acción responde (éxito o
@@ -140,6 +143,7 @@ export default function ActionForm({
                       form.querySelector<HTMLElement>(`[name="${CSS.escape(Object.keys(found)[0])}"]`)?.focus();
                       return;
                     }
+                    if (beforeArm && !beforeArm()) return;
                     setArmedFor(state);
                   }
                 : undefined

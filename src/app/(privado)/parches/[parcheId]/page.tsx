@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ParcheNav from "@/components/parches/ParcheNav";
@@ -7,7 +8,8 @@ import { buttonClasses } from "@/components/ui/button";
 import Card from "@/components/ui/Card";
 import { requireUser } from "@/lib/auth";
 import EnrollEvents from "@/components/parches/EnrollEvents";
-import { getAvailableEvents, getMembership, getParcheEvents } from "@/lib/data";
+import { InviteLinkControls, InviteProvider } from "@/components/parches/InviteLink";
+import { getAvailableEvents, getMembership, getOpenInvitation, getParcheEvents, getParcheMembers } from "@/lib/data";
 import { eventStatusLabel, membershipNotice, ROLE_LABELS } from "@/lib/parches";
 import { canManageParche } from "@/lib/permissions";
 import { displayNameOf } from "@/lib/users";
@@ -21,13 +23,18 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
   const membership = await getMembership(supabase, user.id, parcheId);
   if (!membership) notFound();
   const manager = canManageParche({ userId: user.id, role: membership.role, status: membership.status });
-  const [events, available] = await Promise.all([
+  const [events, available, members, invitation] = await Promise.all([
     getParcheEvents(supabase, parcheId),
     manager ? getAvailableEvents(supabase, parcheId) : Promise.resolve([]),
+    manager ? getParcheMembers(supabase, parcheId) : Promise.resolve([]),
+    manager ? getOpenInvitation(supabase, parcheId) : Promise.resolve(null),
   ]);
+  // Integrantes reales (membresías activas), no invitaciones pendientes.
+  const solo = members.filter((m) => m.status === "active").length <= 1;
   const notice = membershipNotice(membership.status);
 
   return (
+    <InviteProvider parcheId={parcheId} invitation={manager ? invitation : null}>
     <div className="flex flex-col gap-6 animate-fade-in-up">
       <section className="flex items-start gap-4">
         <span
@@ -55,12 +62,32 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
       )}
 
       {manager && events.length === 0 && (
-        <Card variant="glow-green" className="p-5">
-          <h2 className="text-base font-bold text-fg">Tu parche está listo. ¿Qué sigue?</h2>
-          <ol className="mt-3 flex flex-col gap-2 text-sm text-fg-2">
-            <li><strong className="text-fg">1. Invita a tus amigos:</strong> genera un enlace en <Link href={`/parches/${parcheId}/participantes`} className="font-semibold text-cancha-text hover:underline">Participantes</Link> y compártelo.</li>
-            <li><strong className="text-fg">2. Elige un torneo:</strong> {available.length > 0 ? "incorpóralo más abajo, en «Incorporar un torneo»." : "cuando haya un torneo disponible podrás incorporarlo aquí."}</li>
-          </ol>
+        <Card variant="glow-green" className="flex flex-col overflow-hidden sm:flex-row sm:items-center">
+          <div className="p-5 sm:flex-1 sm:p-6">
+            <h2 className="text-base font-bold text-fg">Tu parche está listo. ¿Qué sigue?</h2>
+            <ol className="mt-3 flex flex-col gap-3 text-sm text-fg-2">
+              <li className="flex flex-col gap-2">
+                <span><strong className="text-fg">1. Invita a tus amigos:</strong> crea un enlace y compártelo para que se unan a tu parche.</span>
+                <InviteLinkControls idPrefix="resumen" />
+              </li>
+              <li>
+                <strong className="text-fg">2. Elige un torneo:</strong>{" "}
+                {solo
+                  ? "cuando tengas al menos 2 participantes activos, podrás jugar con tu parche."
+                  : available.length > 0
+                    ? "incorpóralo más abajo, en «Incorporar un torneo»."
+                    : "cuando haya un torneo disponible podrás incorporarlo aquí."}
+              </li>
+            </ol>
+          </div>
+          <Image
+            src="/img/crear-parche.png"
+            alt="Amigos futboleros de camiseta verde celebrando juntos junto a un balón"
+            width={1536}
+            height={1024}
+            sizes="(min-width: 640px) 320px, 100vw"
+            className="order-first aspect-video w-full object-cover object-[center_25%] sm:order-last sm:aspect-[3/2] sm:w-72 sm:shrink-0 sm:object-center md:w-80"
+          />
         </Card>
       )}
 
@@ -107,7 +134,8 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
         )}
       </section>
 
-      {manager && <EnrollEvents parcheId={parcheId} events={available} />}
+      {manager && <EnrollEvents parcheId={parcheId} events={available} solo={solo} />}
     </div>
+    </InviteProvider>
   );
 }

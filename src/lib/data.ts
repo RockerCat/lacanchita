@@ -209,12 +209,12 @@ export async function getOpenInvitation(supabase: Client, parcheId: string): Pro
   };
 }
 
-export type AvailableEvent = { id: string; name: string; status: string };
+export type AvailableEvent = { id: string; name: string; status: string; illustration_path?: string | null };
 
 // Torneos publicados y abiertos (RLS oculta los borradores) que el parche aún no ha incorporado.
 export async function getAvailableEvents(supabase: Client, parcheId: string): Promise<AvailableEvent[]> {
   const [eventsRes, enrolledRes] = await Promise.all([
-    supabase.from("events").select("id, name, status").in("status", ["scheduled", "in_progress"]).order("name"),
+    supabase.from("events").select("id, name, status, illustration_path").in("status", ["scheduled", "in_progress"]).order("name"),
     supabase.from("parche_events").select("event_id").eq("parche_id", parcheId),
   ]);
   if (eventsRes.error) throw new Error(`No se pudieron cargar los torneos disponibles: ${eventsRes.error.message}`);

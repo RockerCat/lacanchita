@@ -60,14 +60,15 @@ describe("promoAction (promoción compacta de /parches)", () => {
   });
   it("parche ya inscrito: nunca ofrece inscribir de nuevo; entra al torneo", async () => {
     const { promoAction } = await import("./jugar");
-    expect(promoAction([enter("p1")], "liga-x")).toEqual({ label: "Entrar al torneo", href: "/parches/p1/torneos/pe-p1" });
+    expect(promoAction([enter("p1")], "liga-x")).toEqual({ label: "Ir al torneo", href: "/parches/p1/torneos/pe-p1" });
     expect(promoAction([enter("p1"), enter("p2")], "liga-x")).toEqual({ label: "Ver mis parches inscritos", href: "/jugar/liga-x" });
   });
   it("miembro sin permisos o deshabilitado: solo ver detalles; sin parches: el estado vacío usa Crear parche", async () => {
     const { promoAction } = await import("./jugar");
     expect(promoAction([{ kind: "ask_admin", parcheId: "p", parcheName: "P" }], "x").label).toBe("Ver detalles");
     expect(promoAction([{ kind: "disabled", parcheId: "p", parcheName: "P" }], "x").label).toBe("Ver detalles");
-    expect(promoAction([], "x").label).toBe("Ver detalles");
+    expect(promoAction([], "x")).toEqual({ label: "Crear mi parche y participar", href: "/parches/nuevo?next=%2Fjugar%2Fx" });
+    expect(promoAction([enter("p1"), enroll], "x").secondary).toEqual({ label: "Inscribir otro parche", href: "/jugar/x" });
   });
   it("destino de creación seguro desde la promoción", async () => {
     const { safeReturnToPlay } = await import("./jugar");

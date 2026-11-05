@@ -89,6 +89,7 @@ export async function createInvitationAction(_prev: InvitationState, formData: F
   const row = Array.isArray(data) ? data[0] : null;
   if (error || !row) return { error: parcheErrorMessage(error), url: null, expiresAt: null };
   revalidatePath(`/parches/${parcheId}/participantes`);
+  revalidatePath(`/parches/${parcheId}`);
   return { error: null, url: invitationUrl(await requestOrigin(), row.token), expiresAt: row.expires_at };
 }
 

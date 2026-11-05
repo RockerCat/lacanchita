@@ -37,18 +37,22 @@ export const roleHome = (superadmin: boolean, playerHome: string): string => (su
 /** Texto breve cuando el torneo no trae uno propio (genérico: no promete equipos ni partidos). */
 export const DEFAULT_PROMO_BLURB = "Arma tu parche, invita a tus amigos y prepárense para pronosticar cada partido.";
 
-export type PromoAction = { label: string; href: string };
+export type PromoAction = { label: string; href: string; secondary?: { label: string; href: string } };
 
 /**
- * Acción de la promoción compacta de /parches según los parches de la persona (reutiliza /jugar/<slug>, que es quien
- * inscribe, con confirmación): nunca ofrece inscribir de nuevo un parche que ya participa.
+ * Acción de la promoción compacta de /parches según los parches de la persona (reutiliza /jugar/<slug> y
+ * /parches/nuevo?next=…, que inscriben con confirmación): nunca ofrece inscribir de nuevo un parche que ya participa.
  */
 export function promoAction(options: PlayOption[], slug: string): PromoAction {
   const play = `/jugar/${encodeURIComponent(slug)}`;
+  if (options.length === 0) return { label: "Crear mi parche y participar", href: `/parches/nuevo?next=${encodeURIComponent(play)}` };
   const enroll = options.filter((o) => o.kind === "enroll");
   const entered = options.filter((o): o is Extract<PlayOption, { kind: "enter" }> => o.kind === "enter");
-  if (enroll.length > 0) return { label: enroll.length === 1 ? "Inscribir mi parche" : "Inscribir un parche", href: play };
-  if (entered.length === 1) return { label: "Entrar al torneo", href: `/parches/${entered[0].parcheId}/torneos/${entered[0].parcheEventId}` };
+  if (entered.length === 1) {
+    const enter = { label: "Ir al torneo", href: `/parches/${entered[0].parcheId}/torneos/${entered[0].parcheEventId}` };
+    return enroll.length > 0 ? { ...enter, secondary: { label: "Inscribir otro parche", href: play } } : enter;
+  }
   if (entered.length > 1) return { label: "Ver mis parches inscritos", href: play };
+  if (enroll.length > 0) return { label: enroll.length === 1 ? "Inscribir mi parche" : "Inscribir un parche", href: play };
   return { label: "Ver detalles", href: play };
 }

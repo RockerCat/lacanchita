@@ -9,10 +9,11 @@ vi.mock("@/app/(privado)/control/actions", () => ({
   uploadCrestAction: async () => ({ error: null }),
   removeCrestAction: async () => ({ error: null }),
 }));
-vi.mock("@/app/(privado)/parches/actions", () => ({ enrollEventAction: async () => ({ error: null }) }));
+vi.mock("@/app/(privado)/parches/actions", () => ({ enrollEventAction: async () => ({ error: null }), createInvitationAction: async () => ({ error: null, url: null, expiresAt: null }) }));
 
 import ResultCard from "./ResultCard";
 import EnrollEventsServer from "../parches/EnrollEvents";
+import { InviteLinkControls, InviteProvider } from "../parches/InviteLink";
 import type { Side } from "./MatchCard";
 import type { Match, Stage } from "@/lib/control/data";
 import type { PendingDraft } from "@/lib/control/results";
@@ -104,12 +105,43 @@ describe("ResultCard (ciclo original: iniciar → marcador en vivo → finalizar
   });
 });
 
+describe("InviteLinkControls (bloque superior del resumen)", () => {
+  const link = (inv: Parameters<typeof InviteProvider>[0]["invitation"]) => textOf(renderToStaticMarkup(<InviteProvider parcheId="p1" invitation={inv}><InviteLinkControls idPrefix="resumen" /></InviteProvider>));
+  it("sin enlace activo ofrece crearlo", () => expect(link(null)).toContain("Crear enlace de invitación"));
+  it("enlace vencido: ofrece crear uno nuevo", () => expect(link({ expiresAt: "2000-01-01T00:00:00Z", useCount: 0, maxUses: null, expired: true })).toContain("Crear enlace de invitación"));
+  it("con enlace activo no genera otro: remite a Participantes", () => {
+    const t = link({ expiresAt: "2999-01-01T00:00:00Z", useCount: 1, maxUses: null, expired: false });
+    expect(t).toContain("Ya tienes un enlace de invitación activo");
+    expect(t).not.toContain("Crear enlace de invitación");
+  });
+});
+
 describe("EnrollEvents", () => {
   it("lista los torneos disponibles con confirmación y aclara que no hay pronósticos retroactivos", () => {
     const html = renderToStaticMarkup(<EnrollEventsServer parcheId="p1" events={[{ id: "e1", name: "Copa Ficticia", status: "scheduled" }]} />);
     expect(textOf(html)).toContain("Copa Ficticia");
-    expect(html).toContain("Incorporar al parche");
+    expect(html).toContain("Jugar con mi parche");
     expect(textOf(html)).toContain("no son retroactivos");
+  });
+  it("fallback sin ilustración, miniatura con ilustración y diálogo solo en parche de un integrante", () => {
+    const base = { parcheId: "p1", events: [{ id: "e1", name: "Copa Ficticia", status: "scheduled", illustration_path: "e1/a.png" }, { id: "e2", name: "Otra Copa", status: "scheduled" }] };
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co");
+    const multi = renderToStaticMarkup(<EnrollEventsServer {...base} />);
+    vi.unstubAllEnvs();
+    expect(multi).toContain("event-illustrations/e1/a.png");
+    expect(multi).toContain("⚽");
+    expect(multi).not.toContain("<dialog");
+    const solo = renderToStaticMarkup(<InviteProvider parcheId="p1" invitation={null}><EnrollEventsServer {...base} solo /></InviteProvider>);
+    expect(solo).toContain("<dialog");
+    expect(textOf(solo)).toContain("¡Tu parche está listo para jugar!");
+    expect(textOf(solo)).toContain("Por ahora eres el único integrante");
+    expect(textOf(solo)).toContain("Crear enlace de invitación");
+    expect(textOf(solo)).toContain("al menos un amigo más");
+    expect(textOf(solo)).not.toContain("Continuar y jugar");
+    expect(textOf(solo)).toContain("Cerrar");
+    const withActive = renderToStaticMarkup(<InviteProvider parcheId="p1" invitation={{ expiresAt: "2999-01-01T00:00:00Z", useCount: 0, maxUses: null, expired: false }}><EnrollEventsServer {...base} solo /></InviteProvider>);
+    expect(textOf(withActive)).toContain("Ya tienes un enlace de invitación activo");
+    expect(textOf(withActive)).not.toContain("Crear enlace de invitación");
   });
   it("sin torneos disponibles", () => {
     expect(textOf(renderToStaticMarkup(<EnrollEventsServer parcheId="p1" events={[]} />))).toMatch(/No hay torneos nuevos/);

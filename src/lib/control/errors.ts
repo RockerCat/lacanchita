@@ -78,6 +78,7 @@ const MESSAGES: Record<string, string> = {
   crest_invalid_type: "Solo se admiten imágenes PNG, JPG o WebP.",
   crest_upload_failed: "No pudimos guardar el escudo. Inténtalo de nuevo.",
   already_enrolled: "Tu parche ya participa en este torneo.",
+  min_members: "Tu parche necesita al menos 2 participantes activos para jugar un torneo. Invita a un amigo y vuelve a intentarlo.",
 };
 
 export function controlErrorMessage(error: { message?: string | null } | null | undefined): string {

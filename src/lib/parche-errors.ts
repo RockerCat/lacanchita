@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   event_not_found: "Ese torneo no está disponible.",
   event_not_open: "Este torneo ya no está abierto para incorporar parches.",
   already_enrolled: "Tu parche ya participa en este torneo.",
+  min_members: "Tu parche necesita al menos 2 participantes activos para jugar un torneo. Invita a un amigo y vuelve a intentarlo.",
   member_disabled: "Reactiva a esta persona antes de hacerla administradora.",
 };
 

@@ -63,7 +63,9 @@ insert into public.parche_members (parche_id, user_id, role, status, disabled_at
   ('10000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000d4', 'admin', 'active', null),
   ('10000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000e5', 'member', 'active', null),
   ('10000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000007', 'admin', 'disabled', now()),
-  ('10000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-0000000000f6', 'owner', 'active', null);
+  ('10000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-0000000000f6', 'owner', 'active', null),
+  -- La inscripción exige ≥2 participantes activos (20261105100000): P2 tiene un segundo miembro.
+  ('10000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-0000000000e5', 'member', 'active', null);
 
 -- Huellas históricas previas.
 create temp table hist_before as

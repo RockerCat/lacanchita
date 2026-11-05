@@ -11,10 +11,10 @@ Q -d postgres -c "drop database if exists canchita_conc" -c "create database can
 SA=00000000-0000-4000-8000-0000000000a1
 OWN=00000000-0000-4000-8000-0000000000c3
 Q -d canchita_conc <<SQL
-insert into auth.users (id, email) values ('$SA', 'sa@ejemplo.test'), ('$OWN', 'owner@ejemplo.test');
+insert into auth.users (id, email) values ('$SA', 'sa@ejemplo.test'), ('$OWN', 'owner@ejemplo.test'), ('00000000-0000-4000-8000-0000000000c4', 'amigo@ejemplo.test');
 insert into private.platform_admins (user_id) values ('$SA');
 insert into public.parches (id, name, created_by) values ('10000000-0000-4000-8000-0000000000a1', 'P1', '$OWN');
-insert into public.parche_members (parche_id, user_id, role) values ('10000000-0000-4000-8000-0000000000a1', '$OWN', 'owner');
+insert into public.parche_members (parche_id, user_id, role) values ('10000000-0000-4000-8000-0000000000a1', '$OWN', 'owner'), ('10000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000c4', 'member');
 SQL
 sa() { Q -d canchita_conc -c "select set_config('request.jwt.claims', '{\"sub\":\"$SA\",\"role\":\"authenticated\"}', false)" -c "set role authenticated" -c "$1" 2>&1 | tail -1; }
 as() { local who=$1; shift; Q -d canchita_conc -c "select set_config('request.jwt.claims', '{\"sub\":\"$who\",\"role\":\"authenticated\"}', false)" -c "set role authenticated" -c "$1" 2>&1 | tail -1; }

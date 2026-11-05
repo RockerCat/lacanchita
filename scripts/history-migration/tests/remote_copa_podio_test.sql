@@ -65,6 +65,12 @@ insert into vars select 'pb', (public.create_parche('Parche B (QA Copa)', gen_ra
 select pg_temp.as_admin();
 insert into vars select 'pb', coalesce((select parche_id::text from public.parche_members where user_id = pg_temp.v('player')::uuid and parche_id <> pg_temp.v('pa')::uuid order by joined_at desc limit 1), 'x') where not exists (select 1 from vars where k = 'pb');
 select pg_temp.as_user(pg_temp.v('player')::uuid);
+-- La regla de inscripción exige ≥2 participantes activos: se añade un amigo al parche de ensayo (dentro de la transacción con ROLLBACK).
+select pg_temp.as_admin();
+insert into public.parche_members (parche_id, user_id)
+  select pg_temp.v('pb')::uuid, user_id from public.parche_members
+  where parche_id = '91ad5d8d-414c-4e74-bf57-2ca476652de0' and role = 'member' and status = 'active' and user_id <> pg_temp.v('player')::uuid limit 1;
+select pg_temp.as_user(pg_temp.v('player')::uuid);
 insert into vars select 'peb', (public.add_event_to_parche(pg_temp.v('pb')::uuid, pg_temp.v('ev')::uuid))::text;
 select pg_temp.as_admin();
 insert into public.parche_members (parche_id, user_id, role, status) values (pg_temp.v('pb')::uuid, pg_temp.v('outsider')::uuid, 'member', 'active');
