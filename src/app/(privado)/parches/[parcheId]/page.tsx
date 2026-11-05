@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Users, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ParcheArt from "@/components/parches/ParcheArt";
@@ -10,6 +11,7 @@ import { requireUser } from "@/lib/auth";
 import EnrollEvents from "@/components/parches/EnrollEvents";
 import { InviteLinkControls, InviteProvider } from "@/components/parches/InviteLink";
 import { getAvailableEvents, getMembership, getOpenInvitation, getParcheEvents, getParcheMembers } from "@/lib/data";
+import { pickFeatured, toLandingTournaments } from "@/lib/landing-tournaments";
 import { eventStatusLabel, membershipNotice, ROLE_LABELS } from "@/lib/parches";
 import { canManageParche } from "@/lib/permissions";
 import { displayNameOf } from "@/lib/users";
@@ -30,8 +32,26 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
     manager ? getOpenInvitation(supabase, parcheId) : Promise.resolve(null),
   ]);
   // Integrantes reales (membresías activas), no invitaciones pendientes.
-  const solo = members.filter((m) => m.status === "active").length <= 1;
+  const activeCount = members.filter((m) => m.status === "active").length;
+  const solo = activeCount <= 1;
+  // Sin torneos y con 2+ activos: el destacado (mismo criterio que la portada, solo entre los que el parche puede incorporar)
+  // va dentro del bloque principal y el resto queda debajo. Sin destacado elegible por la portada se usa el primero disponible.
+  const onboardingReady = manager && events.length === 0 && !solo;
+  let featuredEvent = onboardingReady ? (available[0] ?? null) : null;
+  if (onboardingReady && available.length > 1) {
+    try {
+      const { data } = await supabase.rpc("get_landing_tournaments");
+      const slugs = new Set(available.map((e) => e.slug));
+      const { featured } = pickFeatured(toLandingTournaments(data).filter((t) => slugs.has(t.slug)), new Date());
+      featuredEvent = available.find((e) => e.slug === featured?.slug) ?? featuredEvent;
+    } catch {
+      // se conserva el primero disponible
+    }
+  }
+  const otherEvents = featuredEvent ? available.filter((e) => e.id !== featuredEvent.id) : available;
   const notice = membershipNotice(membership.status);
+  // Integrante activo (no administra) en un parche sin torneos: bienvenida y, aparte, invitación a crear otro parche.
+  const memberWelcome = !manager && membership.status === "active" && events.length === 0;
 
   return (
     <InviteProvider parcheId={parcheId} invitation={manager ? invitation : null}>
@@ -39,9 +59,9 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
       <section className="flex items-start gap-4">
         <span
           aria-hidden="true"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cancha/15 text-2xl font-black text-cancha-text"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cancha/15 text-cancha-text"
         >
-          {membership.parcheName.charAt(0).toUpperCase()}
+          <UsersRound className="h-7 w-7" />
         </span>
         <div className="min-w-0">
           <p className="font-mono text-[11px] uppercase tracking-widest text-fg-3">Parche</p>
@@ -64,27 +84,27 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
       {manager && events.length === 0 && (
         <Card variant="glow-green" className="flex flex-col overflow-hidden sm:flex-row sm:items-center">
           <div className="p-5 sm:flex-1 sm:p-6">
-            <h2 className="text-base font-bold text-fg">Tu parche está listo. ¿Qué sigue?</h2>
-            <ol className="mt-3 flex flex-col gap-3 text-sm text-fg-2">
-              <li className="flex flex-col gap-2">
-                <span><strong className="text-fg">1. Invita a tus amigos:</strong> crea un enlace y compártelo para que se unan a tu parche.</span>
-                <InviteLinkControls idPrefix="resumen" />
-              </li>
-              <li>
-                <strong className="text-fg">2. Elige un torneo:</strong>{" "}
-                {solo
-                  ? "cuando tengas al menos 2 participantes activos, podrás jugar con tu parche."
-                  : available.length > 0
-                    ? "incorpóralo más abajo, en «Incorporar un torneo»."
-                    : "cuando haya un torneo disponible podrás incorporarlo aquí."}
-              </li>
-            </ol>
+            {solo ? (
+              <>
+                <h2 className="text-base font-bold text-fg">¡Tu parche está listo!</h2>
+                <p className="mt-2 text-sm text-fg-2">Suma al menos a un amigo para jugar un torneo: crea un enlace y compártelo.</p>
+                <div className="mt-3">
+                  <InviteLinkControls idPrefix="resumen" />
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-base font-bold text-fg">¡Tu parche está listo para competir!</h2>
+                <p className="mt-2 mb-4 text-sm text-fg-2">Ya son {activeCount} jugadores. ¡Es hora de demostrar quién sabe más de fútbol!</p>
+                <EnrollEvents parcheId={parcheId} events={featuredEvent ? [featuredEvent] : []} embedded />
+              </>
+            )}
           </div>
           <ParcheArt />
         </Card>
       )}
 
-      {!manager && membership.status === "active" && events.length === 0 && (
+      {memberWelcome && (
         <Card variant="glow-green" className="flex flex-col overflow-hidden sm:flex-row sm:items-center">
           <div className="p-5 sm:flex-1 sm:p-6">
             <h2 className="text-base font-bold text-fg">¡Ya eres parte del parche!</h2>
@@ -139,7 +159,26 @@ export default async function ParchePage({ params }: { params: Promise<{ parcheI
         )}
       </section>
 
-      {manager && <EnrollEvents parcheId={parcheId} events={available} solo={solo} />}
+      {memberWelcome && (
+        <Card variant="default" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+          <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cancha/15 text-cancha-text">
+            <Users className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 sm:flex-1">
+            <h2 className="text-base font-bold text-fg">¿Tienes otro grupo de amigos?</h2>
+            <p className="mt-1 text-sm text-fg-2">
+              Puedes crear otro parche para jugar con ellos por separado. Seguirás formando parte de este parche y podrás participar en los mismos torneos con pronósticos y clasificaciones independientes.
+            </p>
+          </div>
+          <Link href="/parches/nuevo" className={`${buttonClasses({ variant: "secondary", size: "sm" })} w-full sm:w-auto sm:shrink-0`}>
+            Crear otro parche
+          </Link>
+        </Card>
+      )}
+
+      {manager && events.length > 0 && <EnrollEvents parcheId={parcheId} events={available} solo={solo} />}
+      {manager && events.length === 0 && solo && <EnrollEvents parcheId={parcheId} events={available} solo heading="Torneos disponibles" />}
+      {onboardingReady && otherEvents.length > 0 && <EnrollEvents parcheId={parcheId} events={otherEvents} heading="Otros torneos disponibles" />}
     </div>
     </InviteProvider>
   );

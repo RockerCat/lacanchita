@@ -16,25 +16,36 @@ export default function EnrollEvents({
   parcheId,
   events,
   solo = false,
+  embedded = false,
+  heading = "Incorporar un torneo",
 }: {
   parcheId: string;
   events: AvailableEvent[];
   solo?: boolean;
+  // Dentro del bloque principal del resumen: sin encabezado propio (lo aporta el bloque) y con estado vacío sin CTA.
+  embedded?: boolean;
+  heading?: string;
 }) {
   const [dialogFor, setDialogFor] = useState<string | null>(null);
 
   return (
-    <section aria-labelledby="incorporar">
-      <h2 id="incorporar" className="mb-1 text-lg font-bold text-fg">
-        Incorporar un torneo
-      </h2>
-      <p className="mb-3 text-sm text-fg-2">
-        Elige un torneo publicado para que tu parche participe. Cada parche lleva sus propios pronósticos y su clasificación. Los pronósticos
-        no son retroactivos: solo se podrá pronosticar lo que aún no haya empezado.
-      </p>
+    <section aria-labelledby={embedded ? undefined : "incorporar"}>
+      {embedded ? (
+        <p className="mb-3 text-xs text-fg-3">Los pronósticos no son retroactivos: solo se podrá pronosticar lo que aún no haya empezado.</p>
+      ) : (
+        <>
+          <h2 id="incorporar" className="mb-1 text-lg font-bold text-fg">
+            {heading}
+          </h2>
+          <p className="mb-3 text-sm text-fg-2">
+            Elige un torneo publicado para que tu parche participe. Cada parche lleva sus propios pronósticos y su clasificación. Los pronósticos
+            no son retroactivos: solo se podrá pronosticar lo que aún no haya empezado.
+          </p>
+        </>
+      )}
       {events.length === 0 ? (
         <Card variant="dashed" className="p-5 text-center">
-          <p className="text-sm text-fg-3">No hay torneos nuevos disponibles ahora mismo.</p>
+          <p className="text-sm text-fg-3">{embedded ? "Todavía no hay torneos disponibles. Cuando se publique uno, aparecerá aquí." : "No hay torneos nuevos disponibles ahora mismo."}</p>
         </Card>
       ) : (
         <ul className="flex flex-col gap-3">

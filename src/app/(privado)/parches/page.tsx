@@ -3,7 +3,7 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/button";
 import Card from "@/components/ui/Card";
-import { Send, Trophy, Users } from "lucide-react";
+import { Send, Trophy, Users, UsersRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { isPlatformAdmin, requireUser } from "@/lib/auth";
 import { CONTROL_PATH, promoAction } from "@/lib/jugar";
@@ -22,7 +22,6 @@ export default async function ParchesPage({ searchParams }: { searchParams: Prom
   // Mismo torneo destacado que la portada (selección compartida). Si no hay uno o falla la lectura, la página sigue igual.
   const promo = await getFeaturedForUser(supabase, user.id, memberships);
   const action = promo ? promoAction(promo.options, promo.featured.slug) : null;
-  const enteredCount = promo ? promo.options.filter((o) => o.kind === "enter").length : 0;
 
   return (
     <section className="animate-fade-in-up">
@@ -38,22 +37,6 @@ export default async function ParchesPage({ searchParams }: { searchParams: Prom
           <Link href="/parches/nuevo" className={buttonClasses({ size: "sm" })}>
             + Crear parche
           </Link>
-        </div>
-      )}
-
-      {promo && memberships.length > 0 && action && (
-        <div className="mt-5">
-          <TournamentPromo
-            t={promo.featured}
-            now={new Date(promo.now)}
-            variant="compact"
-            extra={enteredCount > 0 ? <p className="mt-2 text-xs font-semibold text-cancha-text">{enteredCount === 1 ? "Uno de tus parches ya participa" : `${enteredCount} de tus parches ya participan`}</p> : null}
-          >
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-              <Link href={action.href} className={`${buttonClasses({ size: "md" })} w-full sm:w-auto`}>{action.label}</Link>
-              {action.secondary && <Link href={action.secondary.href} className="text-center text-sm font-semibold text-cancha-text hover:underline sm:px-2">{action.secondary.label}</Link>}
-            </div>
-          </TournamentPromo>
         </div>
       )}
 
@@ -96,6 +79,7 @@ export default async function ParchesPage({ searchParams }: { searchParams: Prom
         )}
         </>
       ) : (
+        <>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {memberships.map((m) => (
             <li key={m.parcheId}>
@@ -105,9 +89,9 @@ export default async function ParchesPage({ searchParams }: { searchParams: Prom
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cancha/15 text-sm font-black text-cancha-text"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cancha/15 text-cancha-text"
                 >
-                  {m.parcheName.charAt(0).toUpperCase()}
+                  <UsersRound className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold text-fg">{m.parcheName}</span>
@@ -123,6 +107,21 @@ export default async function ParchesPage({ searchParams }: { searchParams: Prom
             </li>
           ))}
         </ul>
+        {promo && action && (
+          <section aria-labelledby="proximos-torneos" className="mt-10 border-t border-line pt-6">
+            <h2 id="proximos-torneos" className="text-lg font-bold text-fg">Próximos torneos</h2>
+            <p className="mt-1 text-sm text-fg-2">Oportunidades para jugar con tus parches.</p>
+            <div className="mt-4">
+              <TournamentPromo t={promo.featured} now={new Date(promo.now)} variant="compact">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                  <Link href={action.href} className={`${buttonClasses({ size: "md" })} w-full sm:w-auto`}>{action.label}</Link>
+                  {action.secondary && <Link href={action.secondary.href} className="text-center text-sm font-semibold text-cancha-text hover:underline sm:px-2">{action.secondary.label}</Link>}
+                </div>
+              </TournamentPromo>
+            </div>
+          </section>
+        )}
+        </>
       )}
     </section>
   );
